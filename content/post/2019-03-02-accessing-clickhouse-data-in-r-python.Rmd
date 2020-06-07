@@ -1,0 +1,88 @@
+---
+title: Accessing Clickhouse Data in R & Python
+author: Fausto Lopez
+date: '2018-12-13'
+slug: accessing-clickhouse-data-in-r-python
+categories: []
+tags:
+  - database
+  - r
+  - python
+image:
+  caption: ''
+  focal_point: ''
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Why use Python or R?
+
+I think a lot of people wonder why we would use R or python when there are behemoths like Spark and Clickhouse able to crunch data quickly, but the reality is that these database languages weren't necesarrily set up to do a lot of the more specific data munging work that R and python can do. A lot of data sceintists know that database languages and scripting lanuageges compliment each other. 
+
+In some of my previous posts I set up a clickhouse database under the wsl system in windows, a bit of a tricky setup but for the purpose of testing locally as well as a potential prototype for the company. In thise post I'm going to focus on accessing the data via R and Python.
+
+##R Access
+
+The leading package for clickhouse access in R at the moment is RClickHouse, which comes with dplyr integration for those who enjoy piping. I'm more of a datatable guy, but I appreciate flexibiity. You'll want to install the package and connect to the database; if you followed my previous post, it will be at the localhost address: 
+
+```{r con, message=F, warning=F}
+#install.packages('RClickhouse')
+library(RClickhouse)
+library(DBI)
+library(dplyr)
+con = dbConnect(RClickhouse::clickhouse()
+                      , host="localhost")
+
+```
+
+
+Once you're connected you can begin querying. We will start off with some basic sql:
+
+```{r sql}
+
+dbGetQuery(con, "SELECT cab_type, count(*)
+FROM trips
+           GROUP BY cab_type")
+
+```
+
+
+If you're a fan of dplyr you can pull that way as well:
+
+```{r , message=F, warning=F}
+trips = 
+tbl(con, "trips") %>% 
+  group_by(cab_type) %>%
+  summarise(trips=sum(tip_amount, na.rm = T))
+trips
+```
+
+And when you're done with the code you can disconnect from the database:
+
+```{r , message=F, warning=F}
+# Close the connection
+dbDisconnect(con)
+```
+
+
+##Python Access
+
+Python access is very straightforward. You'll want to reference the [documentation](https://pypi.org/project/clickhouse-driver/). Simply install the driver, I use anaconda for most of my python operations so easily pulled up the terminal and ran the pip install. Next you'll want to run the following code to enter clickhouse through python and see existing tables:
+
+```{r eval = F , message=F, warning=F}
+from clickhouse_driver import Client
+client = Client('localhost')
+client.execute('SHOW TABLES')
+client.execute('SELECT sum(rain) FROM trips')
+```
+
+In my case I have mutiple tables; you can also see I went ahead and executed a sql query:
+
+![](/img/access_clickhouse_r_py/conda_python_clickhouse.png)
+
+##Conclusions
+
+This is a great way to access large data with cutting edge database technology throough your favorite scripting language on a windows machines still running the open source software you love. I see it as a good opportunity for teams working within a windows enviornment but needing access to linux software. In one of my next posts I'll build a quick shiny gui to access the data through a custom front end.

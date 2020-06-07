@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Veronica Momjian | Fausto Lopez</title>
+    <link>/author/veronica-momjian/</link>
+      <atom:link href="/author/veronica-momjian/index.xml" rel="self" type="application/rss+xml" />
+    <description>Veronica Momjian</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Wed, 01 Apr 2015 00:00:00 -0400</lastBuildDate>
+    <image>
+      <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>Veronica Momjian</title>
+      <link>/author/veronica-momjian/</link>
+    </image>
+    
+    <item>
+      <title>Healthy Aging in Far Rockaway</title>
+      <link>/publication/person-re-id/</link>
+      <pubDate>Wed, 01 Apr 2015 00:00:00 -0400</pubDate>
+      <guid>/publication/person-re-id/</guid>
+      <description>&lt;!--More detail can easily be written here using *Markdown* and $\rm \LaTeX$ math code. --&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,74 @@
+---
+title: Accessing Clickhouse Data in R & Python
+author: Fausto Lopez
+date: '2018-12-13'
+slug: accessing-clickhouse-data-in-r-python
+categories: []
+tags:
+  - database
+  - r
+  - python
+image:
+  caption: ''
+  focal_point: ''
+---
+
+
+
+<div id="why-use-python-or-r" class="section level2">
+<h2>Why use Python or R?</h2>
+<p>I think a lot of people wonder why we would use R or python when there are behemoths like Spark and Clickhouse able to crunch data quickly, but the reality is that these database languages weren’t necesarrily set up to do a lot of the more specific data munging work that R and python can do. A lot of data sceintists know that database languages and scripting lanuageges compliment each other.</p>
+<p>In some of my previous posts I set up a clickhouse database under the wsl system in windows, a bit of a tricky setup but for the purpose of testing locally as well as a potential prototype for the company. In thise post I’m going to focus on accessing the data via R and Python.</p>
+</div>
+<div id="r-access" class="section level2">
+<h2>R Access</h2>
+<p>The leading package for clickhouse access in R at the moment is RClickHouse, which comes with dplyr integration for those who enjoy piping. I’m more of a datatable guy, but I appreciate flexibiity. You’ll want to install the package and connect to the database; if you followed my previous post, it will be at the localhost address:</p>
+<pre class="r"><code>#install.packages(&#39;RClickhouse&#39;)
+library(RClickhouse)
+library(DBI)
+library(dplyr)
+con = dbConnect(RClickhouse::clickhouse()
+                      , host=&quot;localhost&quot;)</code></pre>
+<p>Once you’re connected you can begin querying. We will start off with some basic sql:</p>
+<pre class="r"><code>dbGetQuery(con, &quot;SELECT cab_type, count(*)
+FROM trips
+           GROUP BY cab_type&quot;)</code></pre>
+<pre><code>## Warning in evalq((function (..., call. = TRUE, immediate. = FALSE,
+## noBreaks. = FALSE, : column count() converted from UInt64 to Numeric</code></pre>
+<pre><code>##   cab_type   count()
+## 1   yellow 759083667
+## 2    green  69145084</code></pre>
+<p>If you’re a fan of dplyr you can pull that way as well:</p>
+<pre class="r"><code>trips = 
+tbl(con, &quot;trips&quot;) %&gt;% 
+  group_by(cab_type) %&gt;%
+  summarise(trips=sum(tip_amount, na.rm = T))
+trips</code></pre>
+<pre><code>## # Source:   lazy query [?? x 2]
+## # Database: clickhouse 19.1.6 [default@localhost:9000/default; uptime: 0
+## #   days ]
+##   cab_type       trips
+##   &lt;chr&gt;          &lt;dbl&gt;
+## 1 yellow   1242908568.
+## 2 green      80399851.</code></pre>
+<p>And when you’re done with the code you can disconnect from the database:</p>
+<pre class="r"><code># Close the connection
+dbDisconnect(con)</code></pre>
+</div>
+<div id="python-access" class="section level2">
+<h2>Python Access</h2>
+<p>Python access is very straightforward. You’ll want to reference the <a href="https://pypi.org/project/clickhouse-driver/">documentation</a>. Simply install the driver, I use anaconda for most of my python operations so easily pulled up the terminal and ran the pip install. Next you’ll want to run the following code to enter clickhouse through python and see existing tables:</p>
+<pre class="r"><code>from clickhouse_driver import Client
+client = Client(&#39;localhost&#39;)
+client.execute(&#39;SHOW TABLES&#39;)
+client.execute(&#39;SELECT sum(rain) FROM trips&#39;)</code></pre>
+<p>In my case I have mutiple tables; you can also see I went ahead and executed a sql query:</p>
+<div class="figure">
+<img src="/img/access_clickhouse_r_py/conda_python_clickhouse.png" />
+
+</div>
+</div>
+<div id="conclusions" class="section level2">
+<h2>Conclusions</h2>
+<p>This is a great way to access large data with cutting edge database technology throough your favorite scripting language on a windows machines still running the open source software you love. I see it as a good opportunity for teams working within a windows enviornment but needing access to linux software. In one of my next posts I’ll build a quick shiny gui to access the data through a custom front end.</p>
+</div>

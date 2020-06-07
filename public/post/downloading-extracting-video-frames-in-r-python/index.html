@@ -1,0 +1,1232 @@
+<!DOCTYPE html><html lang="en-us" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Fausto Lopez">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="Video Analytics I had a recent project proposal in which I was to do something very interesting with data and rather than download some data set to work with I thought it be fun to work on something new.">
+
+  
+  <link rel="alternate" hreflang="en-us" href="/post/downloading-extracting-video-frames-in-r-python/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css" integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin="anonymous" title="hl-light">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+        
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="/index.webmanifest">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="/post/downloading-extracting-video-frames-in-r-python/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+    
+  
+  
+  <meta property="twitter:card" content="summary">
+  
+  <meta property="og:site_name" content="Fausto Lopez">
+  <meta property="og:url" content="/post/downloading-extracting-video-frames-in-r-python/">
+  <meta property="og:title" content="Downloading &amp; Extracting Video Frames in R &amp; Python | Fausto Lopez">
+  <meta property="og:description" content="Video Analytics I had a recent project proposal in which I was to do something very interesting with data and rather than download some data set to work with I thought it be fun to work on something new."><meta property="og:image" content="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png">
+  <meta property="twitter:image" content="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="en-us">
+  
+    
+      <meta property="article:published_time" content="2018-02-23T00:00:00&#43;00:00">
+    
+    <meta property="article:modified_time" content="2018-02-23T00:00:00&#43;00:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "/post/downloading-extracting-video-frames-in-r-python/"
+  },
+  "headline": "Downloading \u0026 Extracting Video Frames in R \u0026 Python",
+  
+  "datePublished": "2018-02-23T00:00:00Z",
+  "dateModified": "2018-02-23T00:00:00Z",
+  
+  "author": {
+    "@type": "Person",
+    "name": "Fausto Lopez"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "Fausto Lopez",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "Video Analytics I had a recent project proposal in which I was to do something very interesting with data and rather than download some data set to work with I thought it be fun to work on something new."
+}
+</script>
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>Downloading &amp; Extracting Video Frames in R &amp; Python | Fausto Lopez</title>
+
+</head>
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" >
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/">Fausto Lopez</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/">Fausto Lopez</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#about"><span>About</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/files/fausto-lopez-resume.pdf"><span>Resume</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#featured"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  <article class="article">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+  
+  
+<div class="article-container pt-3">
+  <h1>Downloading &amp; Extracting Video Frames in R &amp; Python</h1>
+
+  
+
+  
+    
+
+
+<div class="article-metadata">
+
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Feb 23, 2018
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    4 min read
+  </span>
+  
+
+  
+  
+  
+
+  
+  
+
+</div>
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+</div>
+
+
+
+  <div class="article-container">
+
+    <div class="article-style">
+      
+
+
+<div id="video-analytics" class="section level2">
+<h2>Video Analytics</h2>
+<p>I had a recent project proposal in which I was to do something very interesting with data and rather than download some data set to work with I thought it be fun to work on something new. For some time I have been interested in getting into computer vision and now that I build and fly drones merging the two just seems inevitable. So I spent the last weekend learning how to work with this, most of it in python and then a little bit of it in R for fun. The ultimate goal: to run object detection on drones.</p>
+<p>Another note: a lot of this work as usual comes from learning from great people who help the community. Credits to Harrison at <a href="https://pythonprogramming.net/" class="uri">https://pythonprogramming.net/</a> who hosts an entire youtube tutorial series on opencv not to mention teaches everything for Python. I recommend starting off with this:</p>
+<p><a href="https://www.youtube.com/watch?v=Z78zbnLlPUA&amp;list=PLQVvvaa0QuDdttJXlLtAJxJetJcqmqlQq" class="uri">https://www.youtube.com/watch?v=Z78zbnLlPUA&amp;list=PLQVvvaa0QuDdttJXlLtAJxJetJcqmqlQq</a></p>
+</div>
+<div id="computer-vision-in-r-what-why" class="section level2">
+<h2>Computer Vision in R? What? Why?</h2>
+<p>R is my bread and butter, and I love the language; for those who aren’t as familiar with python this could be a gentle transition into the computer vision world (albeit there is still so much to learn!) and so why not?</p>
+</div>
+<div id="what-do-i-need" class="section level2">
+<h2>What do I need?</h2>
+<p>So before we jump into the code let’s go over the dependencies we will need because there are quite a few. A note of caution, setups differ and I am by no means an expert in installation procedures but I will give you my setup:</p>
+<p>****Running Windows 10 Surface</p>
+<p>Python</p>
+<p>-for python, you’ll have to decide which version to install, 2.7 o3 3.xx, some people will tell you to install Anaconda. Personally I have all three, but for windows video (one link is Harrison’s run of the install):</p>
+<p><a href="https://www.python.org/downloads/release/python-352/" class="uri">https://www.python.org/downloads/release/python-352/</a> <a href="https://www.youtube.com/watch?v=ulJdZn0qBCQ" class="uri">https://www.youtube.com/watch?v=ulJdZn0qBCQ</a></p>
+<p>OpenCV</p>
+<p>-if you follow the youtube video above it should be installed with python 3.5.2</p>
+<p>R</p>
+<p>R is a little easier, install the most recent R version (google it). Install devtools and rtools (just google it, very simple) and then install the ROpenCVlite and Rvision:</p>
+<p><a href="https://github.com/swarm-lab/ROpenCVLite" class="uri">https://github.com/swarm-lab/ROpenCVLite</a> <a href="https://github.com/swarm-lab/Rvision" class="uri">https://github.com/swarm-lab/Rvision</a></p>
+<p>ROpenCVLite is just going to reinstall OpenCV in the right location for Rvision and future R computer vision libraries to access.</p>
+</div>
+<div id="can-we-start-writing-some-code" class="section level1">
+<h1>Can we start writing some Code?</h1>
+<p>Now on to the fun stuff. We can start with R; first lets pull the video file we need (drone video from a detection data set I’m working with):</p>
+<pre class="r"><code>#directory
+                                                                                        setwd(&quot;C:/Users/0000/Documents/original_web_posts/video_prc_r_py&quot;)
+                                                                                        
+#the name of the file
+my_path =paste0(getwd(),&quot;/&quot;,&quot;Video_1.avi&quot;)
+#download the video
+download.file(url = &quot;https://drive.switch.ch/index.php/s/3b3bdbd6f8fb61e05d8b0560667ea992/download?path=%2Fvideos%2Fdrones&amp;files=Video_1.avi&quot;
+,destfile = my_path
+,mode = &quot;wb&quot;
+)</code></pre>
+<p>Once you’ve downloaded the video into a directory we can begin to parse through it; we can check the number of frames in the video and then extract one to plot:</p>
+<pre class="r"><code>library(Rvision)
+#rvision wants us to create a video object
+the_vid = Rvision::video(&quot;C:/Users/0000/Documents/original_web_posts/video_prc_r_py/Video_1.avi&quot;)
+nframes(the_vid)#shows us the number of frames</code></pre>
+<pre><code>## [1] 393</code></pre>
+<pre class="r"><code>my_frame = readFrame(the_vid,3)
+plot(my_frame)</code></pre>
+<p><img src="/post/2019-03-02-downloading-extracting-video-frames-in-r-python_files/figure-html/unnamed-chunk-2-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>release(the_vid) #i believe like closing an odbc connection this is good practice</code></pre>
+<pre><code>## Video released successfully.</code></pre>
+<p>Now that we have the video in place and know how to extract one frame we can simply loop through the frames and save them as images to train our models:</p>
+<pre class="r"><code>library(pbapply)
+                                                                                        
+#rvision wants us to create a video object
+the_vid = video(&quot;C:/Users/0000/Documents/original_web_posts/video_prc_r_py/Video_1.avi&quot;)
+                                                                                        
+#then we loop through that video object and extract the frame
+pblapply(1:10, function(x){
+z = readFrame(the_vid,x)
+                                                                                          setwd(&quot;C:/Users/0000/Documents/original_web_posts/video_prc_r_py&quot;)
+write.Image(z,paste0(x,&quot;_&quot;,&quot;frame&quot;,&quot;.jpg&quot;))
+})</code></pre>
+<pre><code>## [[1]]
+## NULL
+## 
+## [[2]]
+## NULL
+## 
+## [[3]]
+## NULL
+## 
+## [[4]]
+## NULL
+## 
+## [[5]]
+## NULL
+## 
+## [[6]]
+## NULL
+## 
+## [[7]]
+## NULL
+## 
+## [[8]]
+## NULL
+## 
+## [[9]]
+## NULL
+## 
+## [[10]]
+## NULL</code></pre>
+<pre class="r"><code>#for the newbies who perfer the for loops syntax:
+                                                                                        
+# for (i in 1:10) {
+#   the_vid = video(&quot;C:\\Users\\fausto\\Documents\\incubator_img_recog\\plane_classifier\\drone_proj\\videos\\drones\\Video_1.avi&quot;)
+#   z = readFrame(the_vid,i)
+#   plot(z)
+# }
+                                                                                        
+                                                                                        setwd(&quot;C:/Users/0000/Documents/original_web_posts/video_prc_r_py&quot;)
+list.files() </code></pre>
+<pre><code>##  [1] &quot;1_frame.jpg&quot;         &quot;10_frame.jpg&quot;        &quot;2_frame.jpg&quot;        
+##  [4] &quot;3_frame.jpg&quot;         &quot;4_frame.jpg&quot;         &quot;5_frame.jpg&quot;        
+##  [7] &quot;6_frame.jpg&quot;         &quot;7_frame.jpg&quot;         &quot;8_frame.jpg&quot;        
+## [10] &quot;9_frame.jpg&quot;         &quot;vid_frames_r_py.Rmd&quot; &quot;Video_1.avi&quot;</code></pre>
+<p>And that’s about it for downloading video data in R. Insert grayscaling functions into the loop, or other analyses with the EBI or imageR package.</p>
+</div>
+<div id="how-about-python" class="section level1">
+<h1>How about Python?</h1>
+<p>Since we already have the video downloaded in R I won’t bring it in again python. Instead I will run through how to pull the frames and save them. You can run the following:</p>
+<pre class="r"><code>import cv2
+import numpy as np
+import os
+#set directory
+os.chdir(&quot;C:/Users/0000/Documents/original_web_posts/video_prc_r_py&quot;)
+#pull in video
+cap = cv2.VideoCapture(&quot;Video_1.avi&quot;)
+count = 0
+#success =T
+#loop through video and pull frames for saving
+while True:
+    
+    ret, img = cap.read()
+    print &#39;Read a new frame: &#39;, ret
+    gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    os.chdir(&quot;C:/Users/0000/Documents/original_web_posts/video_prc_r_py&quot;)
+    cv2.imwrite(&quot;frame%d.jpg&quot; % count, img)     # save frame as JPEG file
+    count += 1</code></pre>
+<p>The code will kick and error at the end as it runs out of frames, you can adjust to get rid of that. And there it is! A few lines of code and you can already extract frames from videos. In one of my next posts I’ll go over how to use some of that picture data to train a basic Haarcascade so we can detect specific objects in videos.</p>
+</div>
+
+    </div>
+
+    
+
+
+
+
+
+
+<div class="article-tags">
+  
+  <a class="badge badge-light" href="/tag/python/">python</a>
+  
+  <a class="badge badge-light" href="/tag/r/">r</a>
+  
+  <a class="badge badge-light" href="/tag/computer-vision/">computer vision</a>
+  
+</div>
+
+
+
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://twitter.com/intent/tweet?url=/post/downloading-extracting-video-frames-in-r-python/&amp;text=Downloading%20&amp;amp;%20Extracting%20Video%20Frames%20in%20R%20&amp;amp;%20Python" target="_blank" rel="noopener" class="share-btn-twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.facebook.com/sharer.php?u=/post/downloading-extracting-video-frames-in-r-python/&amp;t=Downloading%20&amp;amp;%20Extracting%20Video%20Frames%20in%20R%20&amp;amp;%20Python" target="_blank" rel="noopener" class="share-btn-facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="mailto:?subject=Downloading%20&amp;amp;%20Extracting%20Video%20Frames%20in%20R%20&amp;amp;%20Python&amp;body=/post/downloading-extracting-video-frames-in-r-python/" target="_blank" rel="noopener" class="share-btn-email">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.linkedin.com/shareArticle?url=/post/downloading-extracting-video-frames-in-r-python/&amp;title=Downloading%20&amp;amp;%20Extracting%20Video%20Frames%20in%20R%20&amp;amp;%20Python" target="_blank" rel="noopener" class="share-btn-linkedin">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="whatsapp://send?text=Downloading%20&amp;amp;%20Extracting%20Video%20Frames%20in%20R%20&amp;amp;%20Python%20/post/downloading-extracting-video-frames-in-r-python/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://service.weibo.com/share/share.php?url=/post/downloading-extracting-video-frames-in-r-python/&amp;title=Downloading%20&amp;amp;%20Extracting%20Video%20Frames%20in%20R%20&amp;amp;%20Python" target="_blank" rel="noopener" class="share-btn-weibo">
+          <i class="fab fa-weibo"></i>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+  
+    
+    
+    
+      
+    
+    
+    
+    <div class="media author-card content-widget-hr">
+      
+        
+        <img class="avatar mr-3 avatar-circle" src="/author/fausto-lopez/avatar_hu52a603635ecebd45650b162dadabb4e5_12861_270x270_fill_q90_lanczos_center.jpg" alt="Fausto Lopez">
+      
+
+      <div class="media-body">
+        <h5 class="card-title"><a href="/">Fausto Lopez</a></h5>
+        <h6 class="card-subtitle">Director of Data Engineering &amp; Analytics at NYC Taxi and Limousine Commission</h6>
+        <p class="card-text">My research interests include distributed robotics, mobile computing and programmable matter.</p>
+        <ul class="network-icon" aria-hidden="true">
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="/#contact" >
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://linkedin.com/in/lopezfausto" target="_blank" rel="noopener">
+        <i class="fab fa-linkedin"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://github.com/gcushen" target="_blank" rel="noopener">
+        <i class="fab fa-github"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://gitlab.com/ulysses" target="_blank" rel="noopener">
+        <i class="fab fa-gitlab"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="/files/fausto-lopez-resume.pdf" >
+        <i class="ai ai-cv"></i>
+      </a>
+    </li>
+  
+</ul>
+
+      </div>
+    </div>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <div class="article-widget content-widget-hr">
+    <h3>Related</h3>
+    <ul>
+      
+      <li><a href="/post/accessing-clickhouse-data-in-r-python/">Accessing Clickhouse Data in R &amp; Python</a></li>
+      
+      <li><a href="/post/extracting-images-from-the-internet-with-r/">Extracting Images from the Internet with R</a></li>
+      
+      <li><a href="/post/making-an-r-package-to-call-nhtsa-api/">Making an R package to Call NHTSA API</a></li>
+      
+    </ul>
+  </div>
+  
+
+
+
+
+
+  </div>
+</article>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    <script>const isSiteThemeDark = false;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks",
+        'slides' : "Slides"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+  <p class="powered-by">
+    
+      <a href="/privacy/">Privacy Policy</a>
+    
+    
+       &middot; 
+      <a href="/terms/">Terms</a>
+    
+  </p>
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    Powered by the
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+    <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

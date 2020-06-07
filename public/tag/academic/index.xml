@@ -1,0 +1,690 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Academic | Fausto Lopez</title>
+    <link>/tag/academic/</link>
+      <atom:link href="/tag/academic/index.xml" rel="self" type="application/rss+xml" />
+    <description>Academic</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Sun, 20 Jan 2019 00:00:00 -0500</lastBuildDate>
+    <image>
+      <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>Academic</title>
+      <link>/tag/academic/</link>
+    </image>
+    
+    <item>
+      <title>Loading 50 Million Citibike Trips into Clickhouse on WSL</title>
+      <link>/post/clickhouse_citibike/</link>
+      <pubDate>Sun, 20 Jan 2019 00:00:00 -0500</pubDate>
+      <guid>/post/clickhouse_citibike/</guid>
+      <description>&lt;h2 id=&#34;the-objective&#34;&gt;The Objective&lt;/h2&gt;
+&lt;p&gt;A little while ago I had covered how to load tlc trip records into clickhouse under WSL (Windows subsystems for Linux), on the idea that it could be useful for teams working behind microsoft systems. After working with clickhouse for some time, I&amp;rsquo;ve come to love how easy it is to use and how powerful the database technology is. For some time I&amp;rsquo;ve been toying with the idea of building out a multi-platform transportation app (doesn&amp;rsquo;t everyone) if anything to work on how I can integrate different data sets and practice some app construction.&lt;/p&gt;
+&lt;h2 id=&#34;get-the-data&#34;&gt;Get the Data&lt;/h2&gt;
+&lt;p&gt;When it comes to large data sets, citibike data is probably the next big thing after taxis so I figured I&amp;rsquo;d load that into clickhouse. I went ahead and cloned 
+&lt;a href=&#34;https://github.com/toddwschneider/nyc-citibike-data&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Todd Schneider&amp;rsquo;s repo&lt;/a&gt;; as a transportation guru he has both citibike and taxi repos holding ETL processes in postgresql. You&amp;rsquo;ll want to run the following to get the program running:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;git clone https://github.com/toddwschneider/nyc-citibike-data.git
+cd nyc-citibike-data
+./download_raw_data.sh
+./initialize_database.sh &amp;amp;&amp;amp; ./import_trips.sh
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This shouldn&amp;rsquo;t take too long, took about an hour for me to download everything and another hour for it to process. Once the data is in postgres you will want to extract .gz files, which are highly compressed and will be loaded into clickhouse. Under Todd&amp;rsquo;s schema you&amp;rsquo;ll see he creates a view with combine trip and geographical information:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sql&#34;&gt;CREATE VIEW trips_and_stations AS (
+  SELECT
+    t.*,
+    ss.name AS start_station_name,
+    ss.latitude AS start_station_latitude,
+    ss.longitude AS start_station_longitude,
+    ss.nyct2010_gid AS start_nyct2010_gid,
+    ss.boroname AS start_boroname,
+    ss.ntacode AS start_ntacode,
+    ss.ntaname AS start_ntaname,
+    ss.taxi_zone_gid AS start_taxi_zone_gid,
+    ss.taxi_zone_name AS start_taxi_zone_name,
+    es.name AS end_station_name,
+    es.latitude AS end_station_latitude,
+    es.longitude AS end_station_longitude,
+    es.nyct2010_gid AS end_nyct2010_gid,
+    es.boroname AS end_boroname,
+    es.ntacode AS end_ntacode,
+    es.ntaname AS end_ntaname,
+    es.taxi_zone_gid AS end_taxi_zone_gid,
+    es.taxi_zone_name AS end_taxi_zone_name
+  FROM trips t
+    INNER JOIN stations ss ON t.start_station_id = ss.id
+    INNER JOIN stations es ON t.end_station_id = es.id
+);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We will want to pull more data than this table however, because we want to include weather data in our main table. You&amp;rsquo;ll want to run a left join against weather observations when pulling from postgres. But first, we will need to create a directory to pull the data and then provide the write permissions to write to that directory:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;mkdir -p /mnt/c/Users/yourcompname/nyc-citibike-data/trips
+$ sudo chown -R postgres:postgres \
+    /home/yourcompname/nyc-citibike-data/trips
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now we can use copy to pull the data, I split the files into million chunk files:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sql&#34;&gt;COPY (
+SELECT
+ts.trip_duration,
+ts.start_time,
+ts.stop_time,
+ts.start_station_id,
+ts.start_station_name,
+ts.start_station_latitude,
+ts.start_station_longitude,
+ts.end_station_id,
+ts.end_station_name,
+ts.end_station_latitude,
+ts.end_station_longitude,
+ts.bike_id,
+ts.user_type,
+ts.birth_year,
+ts.gender, 
+ts.start_nyct2010_gid,
+ts.start_boroname,
+ts.start_ntacode,
+ts.start_ntaname,
+ts.start_taxi_zone_gid,
+ts.start_taxi_zone_name,
+ts.end_nyct2010_gid,
+ts.end_boroname,
+ts.end_ntacode,
+ts.end_ntaname,
+ts.end_taxi_zone_gid,
+ts.end_taxi_zone_name,
+weather.precipitation rain,
+weather.snow_depth,
+weather.snowfall,
+weather.max_temperature max_temp,
+weather.min_temperature min_temp,
+weather.average_wind_speed
+FROM trips_and_stations as ts 
+    LEFT JOIN central_park_weather_observations weather
+        ON weather.date = ts.start_time::date
+) TO PROGRAM
+    &#39;split -l 10000000 --filter=&amp;quot;gzip &amp;gt; /mnt/c/Users/yourcompname/Documents/nyc-citibike-data/trips/trips_\$FILE.csv.gz&amp;quot;&#39; WITH CSV;
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This will run in approximatel 15-30 mintues depending on your computer resources.&lt;/p&gt;
+&lt;h2 id=&#34;loading-the-data-into-clickhouse&#34;&gt;Loading the Data into Clickhouse&lt;/h2&gt;
+&lt;p&gt;Once you have the files in place, you&amp;rsquo;ll want to start up clickhouse. If you need to review how to set it up you can check out my previous 
+&lt;a href=&#34;https://www.faustolopez.com/post/a-billion-taxi-rides-in-clickhouse-wsl-on-a-dell-g7/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;post&lt;/a&gt;. Once you&amp;rsquo;re all set, start your server and client:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;sudo service clickhouse-server start
+clickhouse client
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Once in the client create your bike_trips table:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sql&#34;&gt;CREATE TABLE bike_trips (
+trip_duration Nullable(Float64),
+start_time Nullable(DateTime),
+stop_time Nullable(DateTime),
+start_station_id Nullable(String),
+start_station_name Nullable(String),
+start_station_latitude Nullable(Float64),
+start_station_longitude Nullable(Float64),
+end_station_id Nullable(String),
+end_station_name Nullable(String),
+end_station_latitude Nullable(Float64),
+end_station_longitude Nullable(Float64),
+bike_id Nullable(UInt8),
+user_type Nullable(String),
+birth_year Nullable(UInt8),
+gender Nullable(String),
+start_nyct2010_gid Nullable(Int8),
+start_boroname Nullable(String),
+start_ntacode Nullable(String),
+start_ntaname Nullable(String),
+start_taxi_zone_gid Nullable(Int8),
+start_taxi_zone_name Nullable(String),
+end_nyct2010_gid Nullable(Int8),
+end_boroname Nullable(String), 
+end_ntacode Nullable(String),
+end_ntaname Nullable(String),
+end_taxi_zone_gid Nullable(Int8),
+end_taxi_zone_name Nullable(String),
+rain Nullable(Float64),
+snow_depth Nullable(Float64),
+snowfall Nullable(Float64),
+max_temp Nullable(Float64),
+min_temp Nullable(Float64),
+average_wind_speed Nullable(Float64)
+) ENGINE = Log;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;You may wonder why some fields that could be integers or float64 are changed to string. I decided to do this to get the data in quick, opting to optimize and tune later. In order to clean out some of the NULL data I borrowed Mark&amp;rsquo;s cleaning 
+&lt;a href=&#34;https://tech.marksblogg.com/billion-nyc-taxi-clickhouse.html&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;script&lt;/a&gt; he employs with the taxi data in clickhouse. You&amp;rsquo;ll want to log out of clickhouse client and back in terminal run the following:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;cd /mnt/c/Users/yourcompname/Documents/nyc-citibike-data/trips/
+time (for filename in /mnt/c/Users/0000/Documents/nyc-citibike-data/trips/trips_x*.csv.gz; do
+            gunzip -c $filename | \
+                python trans.py | \
+                clickhouse-client \
+                    --query=&amp;quot;INSERT INTO bike_trips FORMAT CSV&amp;quot;
+        done)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Data should load rather quickly, the whole process took me about an hour. At the moment the script kicks and error at the very end, some dirty data that needs to be cleaned but I&amp;rsquo;ll get to that another time. Either way, log back into clickhouse client and run a few quick codes:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;SELECT COUNT(1) FROM bike_trips;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;ch_citibike.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;SELECT user_type, count(*) FROM bike_trips GROUP BY user_type;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;ch_citibike2.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;And that&amp;rsquo;s it, quick simple and incredibly powerful, lightning fast results perfect for analytics. Enjoy!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Using Tabix in Windows WSL</title>
+      <link>/post/using_tabix_windows/</link>
+      <pubDate>Sat, 22 Dec 2018 00:00:00 -0500</pubDate>
+      <guid>/post/using_tabix_windows/</guid>
+      <description>&lt;h2 id=&#34;what-is-tabix&#34;&gt;What is Tabix?&lt;/h2&gt;
+&lt;p&gt;As part of my clickhouse setup series, I wanted to have a gui to work with, especally as a way for analysts without R and Python proficiency to query the database. 
+&lt;a href=&#34;https://tabix.io/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Tabix&lt;/a&gt; seemed perfect for this; in addition the software had dashboarding capabilities for automated reports which seemed perfect.&lt;/p&gt;
+&lt;p&gt;##Connecting&lt;/p&gt;
+&lt;p&gt;Setting up tabix turns out to be incredibly simple. If you have followed my previous posts and set up clickhouse under wsl, then clickhouse will be running off localhost. First make sure cickhouse is running in wsl:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/img/clickhouse_tabix_intro/start_clickhouse.png&#34; alt=&#34;optional caption text&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Since tabix can run off your browser it doesn&amp;rsquo;t even need to be installed. Simply launch the (browser)[http://ui.tabix.io/] and you will be prompted to connect:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/img/clickhouse_tabix_intro/connect.png&#34; alt=&#34;optional caption text&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Under name simply set up a name for your connection, in my case I called it local_ch, then point tabix to local host port 8123. Note that if you are setting up remotely this will be different. I plan to do a tutorial on remote setup later. Under login you&amp;rsquo;ll want to type &amp;lsquo;default&amp;rsquo; since in my set up I haven&amp;rsquo;t added security; once again this will change if we set up remote systems and security in clickhouse. Once you are set, click sign in (I chose to click add new as well in order to store the data).&lt;/p&gt;
+&lt;p&gt;#Querying&lt;/p&gt;
+&lt;p&gt;Once you sign in you will see the querying screen which is pretty intutive. Try and run the first query we ran from 
+&lt;a href=&#34;https://tech.marksblogg.com/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Mark Litwintschik&amp;rsquo;s blog&lt;/a&gt;. You should receive the following error:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/img/clickhouse_tabix_intro/error.png&#34; alt=&#34;optional caption text&#34;&gt;&lt;/p&gt;
+&lt;p&gt;To my knowledge this occurs becuse query time is greater than 5 seconds which is the default query time. Note that query time will vary based on your specs and tuning. In my case I didn&amp;rsquo;t tune the databse yet, and I also didn&amp;rsquo;t create the mergetree version of the table Mark did yet (you will see he creates a smaller table to query with optimized fields in his blog). Regardless I wanted to pump up the query time; all you have to do is go to settings on the top right and change the max exexution time in the new window from 5 to what your want (I put in 100 seconds):&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/img/clickhouse_tabix_intro/fix.png&#34; alt=&#34;optional caption text&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Click apply on the bottom and you should be good to go. Rerun the query and voila:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/img/clickhouse_tabix_intro/query.png&#34; alt=&#34;optional caption text&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Depending on the data you loaded you&amp;rsquo;ll have different numbers, note you can use the x circled in red to save your table.&lt;/p&gt;
+&lt;p&gt;##Conclusions
+And that&amp;rsquo;s how easy it is to connect tabix to your clickhouse instance locally under wsl. In my next post in this series I&amp;rsquo;ll explore how to set up some quick graphs for dashboard reports, something that is very valuable when dealing with large data like this.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>A Billion Taxi Rides in Clickhouse WSL</title>
+      <link>/post/clickhouse_billion_rides_wsl/</link>
+      <pubDate>Fri, 07 Dec 2018 00:00:00 -0500</pubDate>
+      <guid>/post/clickhouse_billion_rides_wsl/</guid>
+      <description>&lt;h2 id=&#34;why-clickhouse&#34;&gt;Why ClickHouse?&lt;/h2&gt;
+&lt;p&gt;Recently I&amp;rsquo;ve been wanting to expand my knowledge of other database types beyond SQL variants and map reduce methods with spark. As a data sceintist at the Taxi &amp;amp; Limousine Commission I follow some of the work that is done by the public using our data and have followed 
+&lt;a href=&#34;https://tech.marksblogg.com/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Mark Litwintschik&amp;rsquo;s blog&lt;/a&gt; blog for some time. At work we currently lean on SQL Server and PostgreSQL along with Python and R for most of our analyses but I&amp;rsquo;ve been curious about incentivizing change (albeit a resistant IT department as many of you probably have).&lt;/p&gt;
+&lt;p&gt;In 2017 Mark benchmarked 1.1 billion taxi rides using 
+&lt;a href=&#34;https://github.com/toddwschneider/nyc-taxi-data&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Todd Schneider&amp;rsquo;s&lt;/a&gt; ETL scripts with our public data. It&amp;rsquo;s been some time but I thought I&amp;rsquo;d give it a shot myself, particularly since I was intrigued by the performance gains over postgres and even spark on a single node machine.&lt;/p&gt;
+&lt;p&gt;I didn&amp;rsquo;t want to spin up a cluster on Amazon to pay at the moment, ot to mention all the storage I would need to buy, so I decided to run this on my Dell G7 laptop which has some impresive specs for a cheap laptop:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/img/clickhouse_single_node/specs.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Since clickhouse only runs on linux distributions I chose to run it on Ubuntu 18.04 on WSL (Windows Subsystem Linux). The reason I didn&amp;rsquo;t choose virtualbox was because I wanted to leverage the full power on my computer, and later test Windows HouseOps functionality to access the server locally, a nifty setup to convince the higher ups to use this.&lt;/p&gt;
+&lt;p&gt;##Getting WSL up and Running&lt;/p&gt;
+&lt;p&gt;Installing wsl in windows is simple, with 
+&lt;a href=&#34;https://docs.microsoft.com/en-us/windows/wsl/install-win10&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;documentation here&lt;/a&gt;. Simply activate via powershell and then install through the windows store (choice 1 from the 3 choices listed in the documentation).&lt;/p&gt;
+&lt;p&gt;Once Ubuntu is installed, you&amp;rsquo;ll want to open up ubuntu through cortana and begin standard linux setup, adding in your password and user information. You&amp;rsquo;ll want to run the usual update and upgrade values:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sudo apt-get update &amp;amp;&amp;amp; sudo apt-get upgrade&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Since I was just testing out the system and wsl is behind windows firewall I didn&amp;rsquo;t setup any firewalls or security.&lt;/p&gt;
+&lt;p&gt;##PostgreSQL&lt;/p&gt;
+&lt;p&gt;I followed Mark&amp;rsquo;s blog on coding the data through 
+&lt;a href=&#34;https://tech.marksblogg.com/billion-nyc-taxi-rides-redshift.html&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;postgres&lt;/a&gt; in order to produce the gz files we will load into clickhouse. You can follow the instructions there but here is a short summary of what to do. You&amp;rsquo;ll want to install postgres client and server. In ubuntu, make a directory for the taxi data and clone Todd&amp;rsquo;s repo (note I chose to place my files in windows in order to play around with accessing files across platforms; this means you will need to access the windows files directories):&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sudo apt-get install postgresql&lt;/code&gt;
+&lt;code&gt;mkdir /mnt/c/Users/0000/Desktop/Documents&lt;/code&gt;
+&lt;code&gt;cd /mnt/c/Users/0000/Desktop/Documents/nyc-taxi-data&lt;/code&gt;
+&lt;code&gt;git clone https://github.com/toddwschneider/nyc-taxi-data.git&lt;/code&gt;
+&lt;code&gt;cd /mnt/c/Users/0000/Desktop/Documents/nyc-taxi-data&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;you&amp;rsquo;ll download the data automatically, but remember that Todd&amp;rsquo;s script pulls the urls of ALL the trip records. If you just want to test first with only a year or so of data I reccomend opening the url script with something like:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sudo nano /mnt/c/Users/0000/Desktop/Documents/nyc-taxi-data/setup_files/raw_data_urls.txt&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;and deleting as many files as you wish, so you can run:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;./download_raw_data.sh &amp;amp;&amp;amp; ./remove_bad_rows.sh&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Once you&amp;rsquo;ve downloaded the data, you can run the initialize and import scripts:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;./import_trip_data.sh&lt;/code&gt;
+&lt;code&gt;./import_fhv_trip_data.sh&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;I chose to do this in chunks as I did not have the hard drive space in place. This is definately the longest part of the process. Once it&amp;rsquo;s done, you will now have a postgresql database with all the data loaded in which you can query. This means we can pull the data out and compress it into .gz files which will be loaded into clickhouse. You&amp;rsquo;ll want to:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;create the directory: &lt;code&gt;mkdir -p /mnt/c/Users/0000/Desktop/Documents/nyc-taxi-data/trips&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;add permissions to write to the directory: &lt;code&gt;sudo chown -R postgres:postgres \&lt;/code&gt;
+&lt;code&gt;/mnt/c/Users/0000/Desktop/Documents/nyc-taxi-data/trips&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;enter postgres: &lt;code&gt;psql nyc-taxi-data&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;And then run the script to pull the data:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;COPY (
+    SELECT trips.id,
+           trips.vendor_id,
+           trips.pickup_datetime,
+           trips.dropoff_datetime,
+           trips.store_and_fwd_flag,
+           trips.rate_code_id,
+           trips.pickup_longitude,
+           trips.pickup_latitude,
+           trips.dropoff_longitude,
+           trips.dropoff_latitude,
+           trips.passenger_count,
+           trips.trip_distance,
+           trips.fare_amount,
+           trips.extra,
+           trips.mta_tax,
+           trips.tip_amount,
+           trips.tolls_amount,
+           trips.ehail_fee,
+           trips.improvement_surcharge,
+           trips.total_amount,
+           trips.payment_type,
+           trips.trip_type,
+           trips.pickup_location_id,
+           trips.dropoff_location_id,
+
+           cab_types.type cab_type,
+
+           weather.precipitation rain,
+           weather.snow_depth,
+           weather.snowfall,
+           weather.max_temperature max_temp,
+           weather.min_temperature min_temp,
+           weather.average_wind_speed wind,
+
+           pick_up.gid pickup_nyct2010_gid,
+           pick_up.ctlabel pickup_ctlabel,
+           pick_up.borocode pickup_borocode,
+           pick_up.boroname pickup_boroname,
+           pick_up.ct2010 pickup_ct2010,
+           pick_up.boroct2010 pickup_boroct2010,
+           pick_up.cdeligibil pickup_cdeligibil,
+           pick_up.ntacode pickup_ntacode,
+           pick_up.ntaname pickup_ntaname,
+           pick_up.puma pickup_puma,
+
+           drop_off.gid dropoff_nyct2010_gid,
+           drop_off.ctlabel dropoff_ctlabel,
+           drop_off.borocode dropoff_borocode,
+           drop_off.boroname dropoff_boroname,
+           drop_off.ct2010 dropoff_ct2010,
+           drop_off.boroct2010 dropoff_boroct2010,
+           drop_off.cdeligibil dropoff_cdeligibil,
+           drop_off.ntacode dropoff_ntacode,
+           drop_off.ntaname dropoff_ntaname,
+           drop_off.puma dropoff_puma
+    FROM trips
+    LEFT JOIN cab_types
+        ON trips.cab_type_id = cab_types.id
+    LEFT JOIN central_park_weather_observations weather
+        ON weather.date = trips.pickup_datetime::date
+    LEFT JOIN nyct2010 pick_up
+        ON pick_up.gid = trips.pickup_nyct2010_gid
+    LEFT JOIN nyct2010 drop_off
+        ON drop_off.gid = trips.dropoff_nyct2010_gid
+) TO PROGRAM
+    &#39;split -l 20000000 --filter=&amp;quot;gzip &amp;gt; /mnt/c/Users/0000/Desktop/db/latest/nyc-taxi-data/trips/trips_\$FILE.csv.gz&amp;quot;&#39;
+    WITH CSV;
+	
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Once you finish downloading the files you are read to load them into clickhouse. The beauty of these files is that you can use them again and again to explore some of the other databases that Mark benchmarks or otherwise explore options you may want to try.&lt;/p&gt;
+&lt;p&gt;##Setting up clickhouse in wsl&lt;/p&gt;
+&lt;p&gt;This was certainly the trickiest part of this porcess. Clickhouse 
+&lt;a href=&#34;https://clickhouse.yandex/docs/en/getting_started/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;documentation&lt;/a&gt; asks for the following code segments:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;deb http://repo.yandex.ru/clickhouse/deb/stable/ main/
+sudo apt-get install dirmngr    # optional
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv E0C56BD4    # optional
+sudo apt-get update
+sudo apt-get install clickhouse-client clickhouse-server
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;If you run these in wsl you will receive an error that says dbgmanager is not installed. WSL to my knowledge has not solved CURL issues through dbmanager so changing keys from sources proves difficult. There are a few options noted in serveral forums that you can see 
+&lt;a href=&#34;https://github.com/Microsoft/WSL/issues/3286&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;here&lt;/a&gt;, but in my case I decided to install clickhouse manually. Simply go to the 
+&lt;a href=&#34;http://repo.yandex.ru/clickhouse/deb/stable/main/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;repository&lt;/a&gt; and install matching versions, of the commons, server and client:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-{r&#34;&gt;clickhouse-common-static_19.1.6_amd64.deb
+clickhouse-server_19.1.6_all.deb
+clickhouse-client_19.1.6_all.deb
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;In my case they hit the downloads folder which you can reference and install:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cd /mnt/c/Users/0000/Desktop/Downloads&lt;/code&gt;
+&lt;code&gt;sudo dpkg -i /path/to/deb/file&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Note you will do this for al three files. Follow the prompts and you should be able to install the software without a hitch. Once everything is installed, start the service:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sudo service clickhouse-server start&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Start the client:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;clickhouse client&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;You are now in the equivalent of the psql database in clickhouse.In here you can run all your database queries, you can create a database and begin making tables. You will want to create the trips table in order to populate it with the data from the .gz files. You can run the following code:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;CREATE TABLE trips (
+    id                      UInt32,
+    vendor_id               String,
+
+    pickup_datetime         DateTime,
+    dropoff_datetime        Nullable(DateTime),
+
+    store_and_fwd_flag      Nullable(FixedString(1)),
+    rate_code_id            Nullable(UInt8),
+    pickup_longitude        Nullable(Float64),
+    pickup_latitude         Nullable(Float64),
+    dropoff_longitude       Nullable(Float64),
+    dropoff_latitude        Nullable(Float64),
+    passenger_count         Nullable(UInt8),
+    trip_distance           Nullable(Float64),
+    fare_amount             Nullable(Float32),
+    extra                   Nullable(Float32),
+    mta_tax                 Nullable(Float32),
+    tip_amount              Nullable(Float32),
+    tolls_amount            Nullable(Float32),
+    ehail_fee               Nullable(Float32),
+    improvement_surcharge   Nullable(Float32),
+    total_amount            Nullable(Float32),
+    payment_type            Nullable(String),
+    trip_type               Nullable(UInt8),
+    pickup_location_id      Nullable(UInt8),
+    dropoff_location_id     Nullable(UInt8),
+
+    cab_type                Nullable(String),
+
+    rain		            Nullable(Float32),
+    snow_depth              Nullable(Float32),
+    snowfall                Nullable(Float32),
+    max_temperature         Nullable(Float32),
+    min_temperature         Nullable(Float32),
+    wind			        Nullable(Float32),
+
+    pickup_nyct2010_gid     Nullable(Int8),
+    pickup_ctlabel          Nullable(String),
+    pickup_borocode         Nullable(Int8),
+    pickup_boroname         Nullable(String),
+    pickup_ct2010           Nullable(String),
+    pickup_boroct2010       Nullable(String),
+    pickup_cdeligibil       Nullable(FixedString(1)),
+    pickup_ntacode          Nullable(String),
+    pickup_ntaname          Nullable(String),
+    pickup_puma             Nullable(String),
+
+    dropoff_nyct2010_gid    Nullable(UInt8),
+    dropoff_ctlabel         Nullable(String),
+    dropoff_borocode        Nullable(UInt8),
+    dropoff_boroname        Nullable(String),
+    dropoff_ct2010          Nullable(String),
+    dropoff_boroct2010      Nullable(String),
+    dropoff_cdeligibil      Nullable(String),
+    dropoff_ntacode         Nullable(String),
+    dropoff_ntaname         Nullable(String),
+    dropoff_puma            Nullable(String)
+) ENGINE = Log;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;and you should receive the following message:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/img/clickhouse_single_node/create_table.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;You should be all set now to load the trips.&lt;/p&gt;
+&lt;p&gt;##Loading the data into clickhouse&lt;/p&gt;
+&lt;p&gt;Loading the data into clickhouse requires editing some of the fields in the trip data. Mark writes:&lt;/p&gt;
+&lt;p&gt;-The dataset itself uses commas for delimiting fields. None of the contents of the data contains any commas themselves so there is no quotations used to aid escaping data. NULL values are defined by the simple absence of any content between the comma delimiters. Normally this isn&amp;rsquo;t an issue but with ClickHouse empty fields won&amp;rsquo;t be treated as NULLs in order to avoid ambiguity with empty strings. For this reason I need to pipe the data through a transformation script that will replace all empty values with \N.&lt;/p&gt;
+&lt;p&gt;So in order to fix this we run his script. You will want to make sure that you install python and create the script:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sudo apt-get install python&lt;/code&gt;
+&lt;code&gt;sudo nano trans.py&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;and then paste in the script text:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;import sys
+
+
+for line in sys.stdin:
+    print &#39;,&#39;.join([item if len(item.strip()) else &#39;\N&#39;
+                    for item in line.strip().split(&#39;,&#39;)])
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now you can run the upload script:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-{r&#34;&gt;time (for filename in /mnt/c/Users/0000/Desktop/Documents/nyc-taxi-data/trips/trips_x*.csv.gz; do
+            gunzip -c $filename | \
+                python trans.py | \
+                clickhouse-client \
+                    --query=&amp;quot;INSERT INTO trips FORMAT CSV&amp;quot;
+        done)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;You should now see clickhouse loading and processing data. This will vary on the amount of data but shouldn&amp;rsquo;t take more than a few hours tops.&lt;/p&gt;
+&lt;p&gt;##Query and Test
+You can take this a step further, creating a mergetree table and tuning up. But you will want to run a few tests first. You can go head and access the data with some basic queries:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;----cab type
+SELECT cab_type, count(*)
+FROM trips
+GROUP BY cab_type
+
+----puloc double group by
+select 
+pickup_location_id,
+cab_type,
+count(pickup_datetime)
+FROM
+trips
+group by
+pickup_location_id,
+cab_type
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;You should see these queries run in a few seconds depending on how much data you loaded.&lt;/p&gt;
+&lt;p&gt;##Conclusions and Next Steps
+Ultimately this is a very powerful software, particularly for low-resource departments with big data usage. This setup is certainly not the most optimal, but for quick access to large data for the average person, clickhouse seems to be a very powerful tool with great potential. A better setup would leverage pure linux distributions, but this can be a great option for organizations which for security reasons may not be able to run linux outside of a windows environment.In the next step I will try and run Tabix, which is a third party gui meant to allow for access of clickhouse data as well as test R and Python access to clickhouse via wsl. Stay tuned!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Taxi Analytics and KPIs through R Shiny</title>
+      <link>/post/taxi_industry_metrics/</link>
+      <pubDate>Mon, 05 Nov 2018 00:00:00 -0500</pubDate>
+      <guid>/post/taxi_industry_metrics/</guid>
+      <description>&lt;p&gt;Taxi Industry &amp;amp; Indicators&lt;/p&gt;
+&lt;p&gt;The Taxi &amp;amp; Limousine Commission of New York City (TLC) is the regulating body for all taxi and for hire vehicle service. In order to understand the industry they regulate data collection is key and quick metrics are important for tracking and getting ahead of shifts in an industry. TLC releases 
+&lt;a href=&#34;http://www.nyc.gov/html/tlc/html/technology/aggregated_data.shtml&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;industry indicators&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;In order to make this easier for the public, I created the 
+&lt;a href=&#34;https://tlcanalytics.shinyapps.io/tlc_fast_dash/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;tlc fast dash&lt;/a&gt;, a simple shiny application meant to help visualize these metrics for rapid use. The source code is available through the app or you can 
+&lt;a href=&#34;https://gitlab.com/maverick_tlc/tlc_fast_dash&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;click right here&lt;/a&gt;. You can also see the official post at the 
+&lt;a href=&#34;https://medium.com/@NYCTLC/simple-to-use-visualizations-for-trip-trends-6dd35ae1f247&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;tlc medium blog&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;This dashboard has gone through many iterations in the beginning of my shiny R career, you can see some of the iterations in snapshots from before:&lt;/p&gt;
+&lt;p&gt;Soon to come is a more comprehensive dashboard, my team is working. Stay tuned.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Creating a Spark Cluster on AWS with 120 Million Flight Records</title>
+      <link>/post/aws_1/</link>
+      <pubDate>Wed, 01 Aug 2018 00:00:00 -0400</pubDate>
+      <guid>/post/aws_1/</guid>
+      <description>&lt;h1 id=&#34;spark-on-aws&#34;&gt;Spark on AWS&lt;/h1&gt;
+&lt;p&gt;I haven&amp;rsquo;t had much exposure on AWS, considering that most of my work is on local databases like a SQL Server or PostgreSQL, but recently I have been exploring new database options. Spark has been on my list and I thought this a good moment to refresh on AWS and start familiarizing myself with more of what Amazon has to offer. I found a great tutorial by 
+&lt;a href=&#34;http://zwmiller.com/projects/setting_up_spark_cluster.html&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Zachariah W. Miller&lt;/a&gt; in which he covers spinning up a cluster and utilizing over 120 million flight records to test the effectiveness of spark as an anlaytics tool. Zack doesn&amp;rsquo;t cover the costs but for those following my process it cost me about 2 bucks to play on this cluster for an hour. Not too shabby!&lt;/p&gt;
+&lt;h1 id=&#34;initiating-the-cluster&#34;&gt;Initiating the Cluster&lt;/h1&gt;
+&lt;p&gt;You&amp;rsquo;ll want to make an account on AWS and then search for the EMR service in your console. Once you enter hit create a cluster and you should see the following:
+&lt;img src=&#34;aws_start.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;You&amp;rsquo;ll want to name your cluster and set up 3 nodes; also pick the last option that installs spark 2.4.0 in your configuration. Your cluster will comprise of a master node and the worker nodes under it. In addition to choosing the amount of nodes, you will also want to pick a key pair. A key pair allows you access to your instance through SSH so that you can go on your computer and enter the AWS master node. If you are just starting off then you will have to create a new one; as is often the case with microsoft windows in programming and data, things are more difficult than MacOS or Linux. First download 
+&lt;a href=&#34;https://www.putty.org/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;putty&lt;/a&gt;, then you&amp;rsquo;ll want to create a 
+&lt;a href=&#34;https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#having-ec2-create-your-key-pair&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;key pair&lt;/a&gt; and convert that key pair with 
+&lt;a href=&#34;https://aws.amazon.com/premiumsupport/knowledge-center/convert-pem-file-into-ppk/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;puttygen&lt;/a&gt;. Once you select your key pair click create cluster. If you&amp;rsquo;re a raspberrypi fan like myself this should be pretty familiar.&lt;/p&gt;
+&lt;p&gt;The cluster will take 5-10 minutes to finish initializing at which moment you will see &lt;em&gt;&lt;strong&gt;waiting . . .&lt;/strong&gt;&lt;/em&gt; Once you see this you can attempt to SSH into your master node. Note that when I tried this there was an issue with the master node; if you get a timeout error you need to go to your 
+&lt;a href=&#34;https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;security group&lt;/a&gt; settings and add a rule for allowing &lt;em&gt;&lt;strong&gt;any connection&lt;/strong&gt;&lt;/em&gt;. Once you have this set up you can SSH in through puttygen, simply follow the instructions provided on SSH section next to your master public ip:
+&lt;img src=&#34;aws_ssh.png&#34; alt=&#34;SSH instruction will appear when you click SSH&#34;&gt;&lt;/p&gt;
+&lt;p&gt;And if all goes well you should get the following:
+&lt;img src=&#34;aws_1.png&#34; alt=&#34;made it this far!&#34;&gt;&lt;/p&gt;
+&lt;p&gt;#Loading the Data&lt;/p&gt;
+&lt;p&gt;Now we will load the flight data; Amazon provides this data for testing it seems and we can grab it from S3 buckets that hold the raw csv files. This data has over 120 million records making it a good start to testing your big data chops (maybe more like medium data, even taxi data isn&amp;rsquo;t really that big). Since your are using AWS EMR to run this cluster the software has already installed Hadoop for you so loading data in HDFS format is easy. You can create a directory and load the data in:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;hadoop fs -mkdir /data #create a directory to mount the data
+hadoop fs -cp s3://dask-data/airline-data/*.csv /data/. #copy all csv files into the directory you created
+hadoop fs -ls /data #check your directory for the files (note you wil have to use hadoop command not just ls)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;You should see something like this in your directory (note it took about 5-10 minutes to copy):
+&lt;img src=&#34;aws_2.png&#34; alt=&#34;all the data&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Now that the data is copied we can start loading it. From what I&amp;rsquo;ve seen the easiest way to get up and running is with pyspark so you can go ahead and call &lt;code&gt;pyspark&lt;/code&gt; in terminal and you&amp;rsquo;ll be greeted with the spark command line:
+&lt;img src=&#34;aws_3.png&#34; alt=&#34;spark!&#34;&gt;&lt;/p&gt;
+&lt;p&gt;You&amp;rsquo;ll notice that I&amp;rsquo;ve already typed in some commands. Spark uses &lt;code&gt;sc&lt;/code&gt; which stands for &lt;code&gt;SqlContext&lt;/code&gt; to tie python to spark; we will want to use this to get SparkSQL setup. Run &lt;code&gt;sqlContext = SQLContext(sc)&lt;/code&gt; to create your connection. Now we can attempt to load the data from HDFS and use Spark&amp;rsquo;s automatic schema detection to attempt to guess our table&amp;rsquo;s data types. You do this by running:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;df = sqlContext.read.format(&#39;com.databricks.spark.csv&#39;)\
+.options(header=&#39;true&#39;, inferschema=&#39;true&#39;).load(&#39;hdfs:///data/*.csv&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This will take a bit of time as the data is loaded in csv format from all over the cluster. Once the progress bar completes you can check your dataframe to see what the schema shows:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;df.printSchema()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;aws_4.png&#34; alt=&#34;We will have to deal with some variables being loaded as strings&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Note that some of the columns that should be numeric were loaded as strings; the failsafe is often to load data in as a string format since it has few restrictions. We will need to convert these values later when we want to attempt a serious analysis but for now we can solve this quickly by casting values to floats.&lt;/p&gt;
+&lt;h1 id=&#34;analyzing-the-data-set-with-pandas&#34;&gt;Analyzing the Data Set with Pandas&lt;/h1&gt;
+&lt;p&gt;We can start to analyze the data with some quick functions imported from pandas:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;from pyspark.sql.types import FloatType
+df.withColumn(&amp;quot;DepDelay&amp;quot;, df[&amp;quot;DepDelay&amp;quot;].cast(FloatType()))\
+.select([&#39;Year&#39;,&#39;DepDelay&#39;]).groupby(&#39;Year&#39;).mean().orderBy(&#39;Year&#39;).show(50)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Here we cast DepDelay as a float in order to apply mathematical operations and group by the year:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;aws_5.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We can run a similar operation on arrivals:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;df.withColumn(&amp;quot;ArrDelay&amp;quot;, df[&amp;quot;ArrDelay&amp;quot;].cast(FloatType()))\
+.select([&#39;Year&#39;,&#39;ArrDelay&#39;]).groupby(&#39;Year&#39;).mean().orderBy(&#39;Year&#39;).show(50)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;aws_6.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We can group by more than just one variable very easily:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;df.withColumn(&amp;quot;ArrDelay&amp;quot;, df[&amp;quot;ArrDelay&amp;quot;].cast(FloatType()))\
+.select([&#39;Year&#39;,&#39;Month&#39;,&#39;ArrDelay&#39;]).groupby(&#39;Year&#39;,&#39;Month&#39;).mean().orderBy(&#39;Year&#39;).show(50)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;aws_7.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;And what about Scala? Well I don&amp;rsquo;t know much about the language yet but I did want to at least test out a bit of it before I terminated the cluster (And you will want to terminate the cluster!). I found that you could access scala shell by typing in the following:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;spark-shell
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I went ahead and made my first scala list:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;aws_8.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;I repeat: make sure you terminate your cluster!&lt;/p&gt;
+&lt;h1 id=&#34;machine-learning-next&#34;&gt;Machine Learning Next?&lt;/h1&gt;
+&lt;p&gt;Using spark on AWS was quick and relatively simple, in fact the hardest part was navigating the giant AWS ecosystem, something that required a few days of studying to fully understand, but now I am starting to see all the possibilities. Zachariah includes a few parts to this tutorial one of which covers machine learning which I am eager to follow next. I think I will blow through this series and then attempt to apply a similar process to the taxi data I work with at TLC.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Setting up a Shiny Server on AWS EC2</title>
+      <link>/post/setting_up_shiny_server/</link>
+      <pubDate>Sun, 01 Jul 2018 00:00:00 -0400</pubDate>
+      <guid>/post/setting_up_shiny_server/</guid>
+      <description>&lt;h1 id=&#34;why-shiny&#34;&gt;Why Shiny?&lt;/h1&gt;
+&lt;p&gt;When I started working at TLC I wanted to use R&amp;rsquo;s Shiny package to help develop some quick and easy to use dashboards that would streamline my work flow and automate a lot of data analytics for the team. At the the time I built a few for internal use, but getting them to run across the agency was difficult; the only package known for local install was 
+&lt;a href=&#34;https://ficonsulting.github.io/RInno/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;RInno&lt;/a&gt; and admin priveleges for this sort of mucking around was frowned upon. The powers at be were not inclined to utilize shiny as they saw it as an open source security issue and so we resolved to use Tableau. I still released a dashboard for public use using shiny.io but that was limited to public data.&lt;/p&gt;
+&lt;p&gt;Recently the team has been running into limitations with tableau and myself and some of my creative staff are working with shiny apps as they offer more flexibility and are just more fun to make. As a result I&amp;rsquo;ve been toying with the idea of setting up our own shiny server infrastructure, and since it&amp;rsquo;s also been something on my own personal to-do list, I figured why not (I had done this with a raspberry pi before albeit for fun). Whatever I learn I can use for my own app development and later scale it to the workplace. But wait, why shiny and not flask or django? Well aside from the existing work we are already doing, I think shiny makes for easier development with decent room for scaling, it&amp;rsquo;s free and has a vibrant community as with all things R. As useful as python is for some of my other work, R&amp;rsquo;s just easier in my opinion, just think about the last time you needed to install a package in R vs. Python at work!?&lt;/p&gt;
+&lt;p&gt;I went through this process on EC2 but there are a lot of tutorials on how to do this on digital ocean as well as on EC2. I used the following sources in combination for my install process:&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://deanattali.com/2015/05/09/setup-rstudio-shiny-server-digital-ocean/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;The great Dean Attali installs shiny server on digital ocean&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://tm3.ghost.io/2017/12/31/deploying-an-r-shiny-app-to-aws/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;The clever Catherine Ordun installs shiny server on aws EC2&lt;/a&gt;&lt;/p&gt;
+&lt;h1 id=&#34;setup-on-aws&#34;&gt;Setup on AWS&lt;/h1&gt;
+&lt;p&gt;Another thing on the old to-do list was using AWS which I haven&amp;rsquo;t used much, always defaulting to the rebel favorite digital ocean, and I thought I could go ahead and kill two birds with one stone so I decided to setup the shiny server on AWS ec2, something which ended up being a great decision as I&amp;rsquo;ve gotten much better with AWS since this process.&lt;/p&gt;
+&lt;p&gt;First you&amp;rsquo;ll want to navigate to 
+&lt;a href=&#34;https://aws.amazon.com/free/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;free tier options&lt;/a&gt; and choose the 750 hours of EC2 per month:
+&lt;img src=&#34;pick_free.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Next you&amp;rsquo;ll want to choose your instance (make sure it says free, I chose 16.04 Ubuntu):
+&lt;img src=&#34;choose_instance.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;You&amp;rsquo;ll be prompted to set up a key pair, if you&amp;rsquo;ve used AWS before you can go ahead and choose the key pair you already made or else you&amp;rsquo;ll have to make your 
+&lt;a href=&#34;https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#having-ec2-create-your-key-pair&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;own&lt;/a&gt;. Once you move through the rest of the defaults you can launch your instance:
+&lt;img src=&#34;launch.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;And you wait until you see it running:
+&lt;img src=&#34;running.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;connect-to-the-your-instance&#34;&gt;Connect to the your Instance&lt;/h2&gt;
+&lt;p&gt;Connecting to your instance can be a headache if you haven&amp;rsquo;t done it before. If you are just starting off then you will have to create a new one; as is often the case with Microsoft windows in programming and data, things are more difficult than MacOS or Linux. First download 
+&lt;a href=&#34;https://www.putty.org/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;putty&lt;/a&gt;, then you’ll want to create a key pair and convert that key pair with 
+&lt;a href=&#34;https://aws.amazon.com/premiumsupport/knowledge-center/convert-pem-file-into-ppk/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;puttygen&lt;/a&gt;. Now you can feed this converted pair into your puttygen app to connect. Note that when you finally get that terminal open, your login is ubuntu with no password.&lt;/p&gt;
+&lt;h1 id=&#34;install-r&#34;&gt;Install R&lt;/h1&gt;
+&lt;p&gt;I like the idea of having a mobile rstudio option, so as Dean Attali does in his install procedure I went ahead and set that up as well. First I updated and added nginx:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;sudo apt-get update
+sudo apt-get -y install nginx
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;To test that this worked you can visit your ip address which will look something like http://ec2- . . . .com and you should see a welcoming from nginx. Dean points out when he tests this in digital ocean:&lt;/p&gt;
+&lt;p&gt;&amp;ldquo;The default file that is served is located at /var/www/html/index.nginx-debian.html, so if you want to change what that webpage is showing, just edit that file with sudo nano /var/www/html/index.nginx-debian.html. For example, I just put a bit of text redirecting to other pages in my index page. The configuration file is located at /etc/nginx/nginx.conf.&lt;/p&gt;
+&lt;p&gt;When you edit an HTML file, you will be able to see the changes immediately when you refresh the page, but if you make configuration changes, you need to restart nginx.&amp;rdquo;&lt;/p&gt;
+&lt;p&gt;You can always manipulate nginx with:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;sudo service nginx stop
+sudo service nginx start
+sudo service nginx restart
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Next we can add R to the source list:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;sudo sh -c &#39;echo &amp;quot;deb http://cran.rstudio.com/bin/linux/ubuntu xenial/&amp;quot; &amp;gt;&amp;gt; /etc/apt/sources.list
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The above will install R 3.4, if you want 3.5 and above run:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;sudo add-apt-repository &#39;deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/&#39;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And add public keys:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
+gpg -a --export E084DAB9 | sudo apt-key add -
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And install R:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;sudo apt-get update
+sudo apt-get -y install r-base
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Go ahead and test R by running R and you should get the pop up window:
+&lt;img src=&#34;r_running.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;On EC2 I chose the free tier, which is the weakest machine with 1GB of ram. Dean points out that you can add 1GB of swap space to allow larger packages to be installed:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;sudo /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024
+sudo /sbin/mkswap /var/swap.1
+sudo /sbin/swapon /var/swap.1
+sudo sh -c &#39;echo &amp;quot;/var/swap.1 swap swap defaults 0 0 &amp;quot; &amp;gt;&amp;gt; /etc/fstab&#39;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Once this is completed we install dependencies for R&amp;rsquo;s devtools along with devtools and Shiny:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;sudo apt-get -y install libcurl4-gnutls-dev libxml2-dev libssl-dev
+sudo su - -c &amp;quot;R -e \&amp;quot;install.packages(&#39;devtools&#39;, repos=&#39;http://cran.rstudio.com/&#39;)\&amp;quot;&amp;quot;
+sudo su - -c &amp;quot;R -e \&amp;quot;devtools::install_github(&#39;daattali/shinyjs&#39;)\&amp;quot;&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;important-r-package-install&#34;&gt;Important: R Package Install!&lt;/h1&gt;
+&lt;p&gt;In order to run certain packages across all users we can&amp;rsquo;t just install in the local R instance you pull up. We will want to leverage root priveleges to install the packages globally. That&amp;rsquo;s why above we run &lt;code&gt;sudo su - -c&lt;/code&gt; in order to get that access.&lt;/p&gt;
+&lt;h1 id=&#34;installing-rstudio-server&#34;&gt;Installing Rstudio Server&lt;/h1&gt;
+&lt;p&gt;Now that we have R installed we can install Rstudio server which you will be able to access from anywhere with a computer; start with the dependencies:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;sudo apt-get -y install gdebi-core
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Next grab the latest version of rstudio; note that you will have to swap the download link for the latest one on the 
+&lt;a href=&#34;https://www.rstudio.com/products/rstudio/download-server/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;downloads page&lt;/a&gt;:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;wget https://download2.rstudio.org/rstudio-server-1.1.463-amd64.deb
+sudo gdebi rstudio-server-1.1.463-amd64.deb
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Before we access rstudio server we have to make sure that our EC2 security settings allow for connections. This is not the most secure way to do things, but at this moment I am just proving a concept. You&amp;rsquo;ll want to navigate to your EC2 dashboard and then down to security groups. Once there locate the security group associated with your instance and edit the inbound rules:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;edit_rules.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;This will open up a window where you can edit the port connections:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;edit_port.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Here we are allowing a connection from anywhere to hit the relevant ports. You will add rules for port 8787, 3838 and 80 because we will use all these to access our server.&lt;/p&gt;
+&lt;p&gt;And now you should be able to access rstudio server in your browser with your ec2 address:
+&lt;img src=&#34;rstudio_server_running.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;When I got here initially I was not sure how to login, as I had not created another user; the process in EC2 looked a little trickier and I was running into errors. My workaround was to create a password for the ubuntu un which is the default. Simply run:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;sudo passwd ubuntu
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Enter a password and you should be good to go.&lt;/p&gt;
+&lt;h1 id=&#34;installing-shiny-server&#34;&gt;Installing Shiny Server&lt;/h1&gt;
+&lt;p&gt;We finally reach the main portion of this tutorial which is installing shiny server! You&amp;rsquo;ll start by importing the shiny package needed to run shiny server an we will bring in the rmarkdown package as well since shiny server lets you run rmarkdown documents:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;sudo su - -c &amp;quot;R -e \&amp;quot;install.packages(&#39;shiny&#39;, repos=&#39;http://cran.rstudio.com/&#39;)\&amp;quot;&amp;quot;
+sudo su - -c &amp;quot;R -e \&amp;quot;install.packages(&#39;rmarkdown&#39;, repos=&#39;http://cran.rstudio.com/&#39;)\&amp;quot;&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Just like before you&amp;rsquo;ll want to grab the latest version of 
+&lt;a href=&#34;https://www.rstudio.com/products/shiny/download-server/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;shiny server&lt;/a&gt;:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;wget https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.9.923-amd64.deb
+sudo gdebi shiny-server-1.5.9.923-amd64.deb
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Shiny will let you know it&amp;rsquo;s running:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;shiny_running.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Once this runs you will be able to hit your EC2 address again as with rstudio server but instead of 8787 as your port you will point the address to 3838 and you will get:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;shiny_page.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h1 id=&#34;add-write-and-read-priveleges&#34;&gt;Add write and read priveleges&lt;/h1&gt;
+&lt;pre&gt;&lt;code&gt;sudo groupadd shiny-apps
+sudo usermod -aG shiny-apps ubuntu
+sudo usermod -aG shiny-apps shiny
+cd /srv/shiny-server
+sudo chown -R ubuntu:shiny-apps .
+sudo chmod g+w .
+sudo chmod g+s .
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;deploy-a-shiny-app-using-git&#34;&gt;Deploy a Shiny App using Git&lt;/h1&gt;
+&lt;p&gt;More to come here as I update this post&lt;/p&gt;
+&lt;h1 id=&#34;issues-with-rgdal&#34;&gt;issues with rgdal&lt;/h1&gt;
+&lt;p&gt;run:
+&lt;img src=&#34;https://stackoverflow.com/questions/15248815/rgdal-package-installation&#34; alt=&#34;link&#34;&gt;
+sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
+sudo apt update
+sudo apt install gdal-bin python-gdal python3-gdal libgdal1-dev
+sudo apt-get install libudunits2-dev libgdal-dev libgeos-dev libproj-dev
+install.packages(&amp;ldquo;rgdal&amp;rdquo;)&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>3d Printing Parts for my Printer: Raspberry Pi Camera Assembly</title>
+      <link>/post/rpi_cam/</link>
+      <pubDate>Fri, 28 Jul 2017 00:00:00 -0400</pubDate>
+      <guid>/post/rpi_cam/</guid>
+      <description>&lt;h2 id=&#34;a-self-conscious-printer&#34;&gt;A Self Conscious Printer&lt;/h2&gt;
+&lt;p&gt;Since it&amp;rsquo;s the middle of the summer and I&amp;rsquo;m out and about, I don&amp;rsquo;t get as much time to play with my new toys, too busy hiking and motorcycling. Finally got a chance to work on my 3d printer again. I though it best to set up some sort of home server that I could use to track my printer, send it jobs from elsewhere and generally control it remotely.&lt;/p&gt;
+&lt;p&gt;A lot of people online were recommending Octopi or Astrobox as good options to run a server, but both required a raspberrypi 3 which I didn&amp;rsquo;t have. What I did have lying around were some raspberry pi zeros so I figured I could make do with those. I decided to go with this lovely 
+&lt;a href=&#34;https://www.thingiverse.com/thing:2251878&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;model&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>My 3d Printer is Running!</title>
+      <link>/post/threed_printer_running/</link>
+      <pubDate>Tue, 20 Jun 2017 00:00:00 -0400</pubDate>
+      <guid>/post/threed_printer_running/</guid>
+      <description>&lt;p&gt;My 3d printer finally arrived in the mail, and I spend the better half of my day assembling it and tuning it to get it to print something that didn&amp;rsquo;t look like a mess. After a bunch of trial and error I finally got it running. Check the video 
+&lt;a href=&#34;https://www.youtube.com/watch?v=gdKEcOAStx0&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>blah blah blah</title>
+      <link>/post/sonar_step1/</link>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
+      <guid>/post/sonar_step1/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

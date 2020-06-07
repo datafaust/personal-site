@@ -1,0 +1,174 @@
+---
+title: Extracting Images from the Internet with R
+author: Fausto Lopez
+date: '2018-02-01'
+slug: extracting-images-from-the-internet-with-r
+categories: []
+tags:
+  - r
+  - computer vision
+image:
+  caption: ''
+  focal_point: ''
+---
+
+
+
+<div id="why-build-an-image-database" class="section level2">
+<h2>Why build an image database?</h2>
+<p>In a previous post I went over how to pull in video data and parse out frames for processing. That’s really useful for pulling in the data you ultimately want to screen, but at times there is also a need for having other images. You may want to classify certain objects as they appear in other videos, or build Haarcascades with specific images. Regardless you’ll need to access images. I’m going to showcase how to do this in R with imagenet.</p>
+<p>Imagenet is a very popular image database and you can search for virtually anything. In this case I’m going to pull from the image database to construct a database from a few key word links. Ultimately, with this scenario you will easily be able to adopt the code to whatever links you want to pull.</p>
+</div>
+<div id="define-your-database" class="section level2">
+<h2>Define your database</h2>
+<p>Lately my focus is on building object detection for drones so in my mind I figure I will need pictures of skies, different types of drones, planes and anything else a drone might run into at higher altitudes. I went ahead and searched key word:</p>
+<p><img src="/post/2019-03-02-extracting-images-from-the-internet-with-r_files/figure-html/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>click downloads:</p>
+<p><img src="/post/2019-03-02-extracting-images-from-the-internet-with-r_files/figure-html/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>you’ll want to copy the url addresses:</p>
+<p><img src="/post/2019-03-02-extracting-images-from-the-internet-with-r_files/figure-html/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="build-the-program" class="section level2">
+<h2>Build the program</h2>
+<p>Repeat this process for all the keywords you are interested in. Note some pictures may overlap in categories, this is something you will probably want to filter out later when you build out a funciton for searching duplicates. Below we start out with a loop that iterates trhough each link:</p>
+<pre class="r"><code>#loop that iterates through each link
+library(pbapply)
+urls = c(#sports = &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n00523513&quot;,
+         bird = &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n01517966&quot;,
+          drones = &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n03245889&quot;
+         ,bird = &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n01517966&quot;
+        ,people = &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n07942152&quot;
+        ,planes = &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n02690373&quot;
+        ,sky = &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n09436708&quot;)
+pblapply(1:length(urls),function(x){
+  print(urls[x])
+})</code></pre>
+<pre><code>##                                                                       bird 
+## &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n01517966&quot; 
+##                                                                     drones 
+## &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n03245889&quot; 
+##                                                                       bird 
+## &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n01517966&quot; 
+##                                                                     people 
+## &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n07942152&quot; 
+##                                                                     planes 
+## &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n02690373&quot; 
+##                                                                        sky 
+## &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n09436708&quot;</code></pre>
+<pre><code>## [[1]]
+##                                                                       bird 
+## &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n01517966&quot; 
+## 
+## [[2]]
+##                                                                     drones 
+## &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n03245889&quot; 
+## 
+## [[3]]
+##                                                                       bird 
+## &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n01517966&quot; 
+## 
+## [[4]]
+##                                                                     people 
+## &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n07942152&quot; 
+## 
+## [[5]]
+##                                                                     planes 
+## &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n02690373&quot; 
+## 
+## [[6]]
+##                                                                        sky 
+## &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n09436708&quot;</code></pre>
+<p>If we loop through the urls one at a time it could take a while. In my work I often parallelize code in order to be more efficient so it’s applied here using the parallel package in R. The general write up looks like this:</p>
+<pre class="r"><code>cl = makeCluster(detectCores()-1) #this function detects yours cores 
+clusterExport(cl,c(&quot;libs&quot;,&quot;urls&quot;)) #you will want to export the functions and objects to each core
+clusterEvalQ(cl,lapply(libs,require,character.only = T)) #you will want to pass your libraries as well
+pblapply(1:length(urls),function(x){
+  print(urls[x])
+},cl = cl)
+stopCluster(cl)
+rm(gcl)
+gc()</code></pre>
+<p>You can choose to omit the parellizing if you wish, as you can see, it’s quite simple to remove or add on. Regardless now that we are successfully looping through the links we can nest another loop inside that will run through each of the links and extract the pictures. It then labels the picture by sequence and saves it into a directory. Note the trycatch function is used to pass through the errors and keep going:</p>
+<pre class="r"><code>#to download negative people and sky images from imagenet
+#author: fausto
+#libraries
+libs = c(&#39;data.table&#39;, &#39;lubridate&#39;, &#39;fasttime&#39;
+         , &#39;pbapply&#39;, &#39;dplyr&#39;, &#39;parallel&#39;,&#39;fst&#39;
+         ,&#39;RCurl&#39;)
+lapply(libs, require, character.only = T)
+urls = c(#sports = &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n00523513&quot;,
+         bird = &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n01517966&quot;,
+          drones = &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n03245889&quot;
+         ,bird = &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n01517966&quot;
+        ,people = &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n07942152&quot;
+        ,planes = &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n02690373&quot;
+        ,sky = &quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n09436708&quot;)
+#functional loop for entire data set pull----------------------------------
+#lets speed up the process with parallelizing it
+#stopCluster(cl)
+cl = makeCluster(detectCores()-3)
+clusterExport(cl,c(&quot;libs&quot;,&quot;urls&quot;))
+clusterEvalQ(cl,lapply(libs,require,character.only = T))
+pblapply(1:length(urls[1])
+         ,function(x){
+  
+  #print the directory            
+  print(paste0(getwd(),&quot;/&quot;,names(urls)[x]))
+           
+  #create a directory for it
+  dir.create(paste0(getwd(),&quot;/&quot;,names(urls)[x]))
+           
+  #set that directory
+  new_direc = paste0(getwd(),&quot;/&quot;,names(urls)[x])
+  setwd(new_direc)
+  print(new_direc)
+  
+  #pull the lines from the site
+  foto = readLines(urls[x])
+  
+    pblapply(1:length(foto), function(g){
+               
+      #(g)
+      
+      #loop will continue no matter what
+      tryCatch({              
+        
+        #download the data
+        download.file(
+          foto[g]
+          ,destfile = paste0(new_direc
+                             ,&quot;/&quot;,g,&quot;.jpg&quot;)
+          ,mode = &quot;wb&quot;)
+        }, error=function(i){
+                 
+                 print(&quot;error keep going&quot;)
+                 
+                 })
+      
+      
+    })
+ 
+ #reset direc
+ setwd(&quot;my output directory&quot;)  
+  
+},cl = cl
+)
+stopCluster(cl)
+rm(cl)
+gc()</code></pre>
+<p>Now check you directory for the jpgs to make sure it has the files:</p>
+<pre class="r"><code>setwd(&quot;my output directory&quot;)
+length(list.files(pattern = &quot;.jpg&quot;))
+
+## [1] 1053</code></pre>
+<p>And read a file in to see what it looks like:</p>
+<pre class="r"><code>library(EBImage)
+setwd(direc)
+plot(
+  readImage(
+    list.files(pattern = &quot;.png&quot;)[4]
+    )
+)</code></pre>
+<p><img src="/post/2019-03-02-extracting-images-from-the-internet-with-r_files/figure-html/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>And that’s it, you now have an image database at your disposal with seperate directories which you can manipulate to your heart’s desire. In a later post I’ll cover how to clean the bad images and have everything tidy.</p>
+</div>

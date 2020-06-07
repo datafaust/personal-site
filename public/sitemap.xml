@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>/</loc>
+    <lastmod>2019-02-05T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/slides/</loc>
+    <lastmod>2019-02-05T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/slides/example/</loc>
+    <lastmod>2019-02-05T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tag/academic/</loc>
+    <lastmod>2019-01-20T00:00:00-05:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/authors/</loc>
+    <lastmod>2019-01-20T00:00:00-05:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/author/fausto-lopez/</loc>
+    <lastmod>2019-01-20T00:00:00-05:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/clickhouse_citibike/</loc>
+    <lastmod>2019-01-20T00:00:00-05:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/</loc>
+    <lastmod>2019-01-20T00:00:00-05:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/using_tabix_windows/</loc>
+    <lastmod>2018-12-22T00:00:00-05:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/accessing-clickhouse-data-in-r-python/</loc>
+    <lastmod>2018-12-13T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tag/database/</loc>
+    <lastmod>2018-12-13T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tag/python/</loc>
+    <lastmod>2018-12-13T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tag/r/</loc>
+    <lastmod>2018-12-13T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/clickhouse_billion_rides_wsl/</loc>
+    <lastmod>2018-12-07T00:00:00-05:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/taxi_industry_metrics/</loc>
+    <lastmod>2018-11-05T00:00:00-05:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/aws_1/</loc>
+    <lastmod>2018-08-01T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/publication-type/4/</loc>
+    <lastmod>2018-07-01T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/publication/clothing-search/</loc>
+    <lastmod>2018-07-01T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/author/james-parrot/</loc>
+    <lastmod>2018-07-01T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/author/michael-reich/</loc>
+    <lastmod>2018-07-01T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/publication_types/</loc>
+    <lastmod>2018-07-01T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/setting_up_shiny_server/</loc>
+    <lastmod>2018-07-01T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/author/tlc-support/</loc>
+    <lastmod>2018-07-01T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/privacy/</loc>
+    <lastmod>2018-06-28T00:00:00+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/terms/</loc>
+    <lastmod>2018-06-28T00:00:00+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/talk/example2/</loc>
+    <lastmod>2018-05-17T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tag/computer-vision/</loc>
+    <lastmod>2018-02-23T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/downloading-extracting-video-frames-in-r-python/</loc>
+    <lastmod>2018-02-23T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/extracting-images-from-the-internet-with-r/</loc>
+    <lastmod>2018-02-01T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/making-an-r-package-to-call-nhtsa-api/</loc>
+    <lastmod>2017-10-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tag/taxi/</loc>
+    <lastmod>2017-10-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tag/transportation/</loc>
+    <lastmod>2017-10-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/rpi_cam/</loc>
+    <lastmod>2017-07-28T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/author/fausto/</loc>
+    <lastmod>2017-06-20T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/threed_printer_running/</loc>
+    <lastmod>2017-06-20T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/talk/example/</loc>
+    <lastmod>2017-01-01T00:00:00-05:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/</loc>
+    <lastmod>2017-01-01T00:00:00-05:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/publication/</loc>
+    <lastmod>2017-01-01T00:00:00-05:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/talk/</loc>
+    <lastmod>2017-01-01T00:00:00-05:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/project/citibike/</loc>
+    <lastmod>2016-04-27T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tag/demo/</loc>
+    <lastmod>2016-04-27T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/project/external-project/</loc>
+    <lastmod>2016-04-27T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/project/</loc>
+    <lastmod>2016-04-27T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/project/rodents/</loc>
+    <lastmod>2016-04-27T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/project/verycoolstudios/</loc>
+    <lastmod>2016-04-27T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tag/react/</loc>
+    <lastmod>2016-04-27T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/project/taxifastdash/</loc>
+    <lastmod>2016-04-27T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/sonar_step1/</loc>
+    <lastmod>2018-01-13T00:00:00-05:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/publication/person-re-id/</loc>
+    <lastmod>2015-04-01T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/author/paula-bonfatti/</loc>
+    <lastmod>2015-04-01T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/author/veronica-momjian/</loc>
+    <lastmod>2015-04-01T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/categories/</loc>
+  </url>
+  
+  <url>
+    <loc>/author/fausto-lopez/</loc>
+  </url>
+  
+  <url>
+    <loc>/author/%E5%90%B3%E6%81%A9%E9%81%94/</loc>
+  </url>
+  
+</urlset>

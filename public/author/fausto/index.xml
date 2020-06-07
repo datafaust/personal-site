@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Fausto | Fausto Lopez</title>
+    <link>/author/fausto/</link>
+      <atom:link href="/author/fausto/index.xml" rel="self" type="application/rss+xml" />
+    <description>Fausto</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Tue, 20 Jun 2017 00:00:00 -0400</lastBuildDate>
+    <image>
+      <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>Fausto</title>
+      <link>/author/fausto/</link>
+    </image>
+    
+    <item>
+      <title>My 3d Printer is Running!</title>
+      <link>/post/threed_printer_running/</link>
+      <pubDate>Tue, 20 Jun 2017 00:00:00 -0400</pubDate>
+      <guid>/post/threed_printer_running/</guid>
+      <description>&lt;p&gt;My 3d printer finally arrived in the mail, and I spend the better half of my day assembling it and tuning it to get it to print something that didn&amp;rsquo;t look like a mess. After a bunch of trial and error I finally got it running. Check the video 
+&lt;a href=&#34;https://www.youtube.com/watch?v=gdKEcOAStx0&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

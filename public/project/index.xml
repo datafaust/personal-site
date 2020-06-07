@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Projects | Fausto Lopez</title>
+    <link>/project/</link>
+      <atom:link href="/project/index.xml" rel="self" type="application/rss+xml" />
+    <description>Projects</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Wed, 27 Apr 2016 00:00:00 -0400</lastBuildDate>
+    <image>
+      <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>Projects</title>
+      <link>/project/</link>
+    </image>
+    
+    <item>
+      <title>Citibike Locator: find citi-bike locations in NYC</title>
+      <link>/project/citibike/</link>
+      <pubDate>Wed, 27 Apr 2016 00:00:00 -0400</pubDate>
+      <guid>/project/citibike/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>LinkNYC Locator: find Wi-fi spots</title>
+      <link>/project/external-project/</link>
+      <pubDate>Wed, 27 Apr 2016 00:00:00 -0400</pubDate>
+      <guid>/project/external-project/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>RatInspector: a webapp tracking NYC&#39;s battle against the rat hordes</title>
+      <link>/project/rodents/</link>
+      <pubDate>Wed, 27 Apr 2016 00:00:00 -0400</pubDate>
+      <guid>/project/rodents/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>RatInspector: a webapp tracking NYC&#39;s battle against the rat hordes</title>
+      <link>/project/verycoolstudios/</link>
+      <pubDate>Wed, 27 Apr 2016 00:00:00 -0400</pubDate>
+      <guid>/project/verycoolstudios/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Taxi Fast Dashboard</title>
+      <link>/project/taxifastdash/</link>
+      <pubDate>Wed, 27 Apr 2016 00:00:00 -0400</pubDate>
+      <guid>/project/taxifastdash/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

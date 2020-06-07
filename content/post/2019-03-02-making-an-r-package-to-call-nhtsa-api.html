@@ -1,0 +1,165 @@
+---
+title: Making an R package to Call NHTSA API
+author: Fausto Lopez
+date: '2017-10-14'
+slug: making-an-r-package-to-call-nhtsa-api
+categories: []
+tags:
+  - r
+  - transportation
+  - taxi
+image:
+  caption: ''
+  focal_point: ''
+---
+
+
+
+<div id="why-use-the-nhtsa-api" class="section level2">
+<h2>Why use the NHTSA API?</h2>
+<p>Recently my team has had to work with matching vehicle information to taxi data, specifically make and model information we didn’t have. It reminded me of a while back, mid 2016 during the beginnings of our driver income study when we needed vin information to calculate msrp and look at fuel consumption. At the time I had not been able to locate a package in R to call NHTSA (National Highway Transportation Authority). They have a slim but useful <a href="https://vpic.nhtsa.dot.gov/api/">api</a>.</p>
+<p>I hadn’t built a package before then, so I thought it would be a good chance to collect some interesting data and learn how to make a package. I reference Hilary Park’s <a href="https://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch/">blog</a> at the time and created my first R package which I called caRshop. It’s nothing more than a basic wrapper but it ended up being very useful for our study as well as our enforcement unit which used the information to validate their inspection data.</p>
+</div>
+<div id="example" class="section level2">
+<h2>Example</h2>
+<p>By now there are some powerful vin decoding packages out there but if you wish to give caRshop a chance you can install it from the <a href="https://github.com/datafaust/caRshop">repo</a>:</p>
+<pre class="r"><code>devtools::install_github(&#39;datafaust/caRshop&#39;)</code></pre>
+<p>Once it’s installed you can leverage functions to extract data for a vin. For instance you can pull for basic vin information with our favorite fast and furious character:</p>
+<pre class="r"><code>library(caRshop)
+vin_diesel(&quot;1G2HX54K724118697&quot;, sec = 1, tidyup = T)</code></pre>
+<pre><code>## [1] &quot;https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/1G2HX54K724118697?format=json&quot;</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>##   Count                       Message            SearchCriteria
+## 1   131 Results returned successfully VIN(s): 1G2HX54K724118697
+##   Results.ABS Results.ActiveSafetySysNote Results.AdaptiveCruiseControl
+## 1                                                                      
+##   Results.AdaptiveDrivingBeam Results.AdaptiveHeadlights
+## 1                                                       
+##   Results.AdditionalErrorText Results.AirBagLocCurtain
+## 1                                                     
+##         Results.AirBagLocFront Results.AirBagLocKnee
+## 1 1st Row (Driver &amp; Passenger)                      
+##   Results.AirBagLocSeatCushion        Results.AirBagLocSide
+## 1                              1st Row (Driver &amp; Passenger)
+##   Results.Artemis Results.AutoReverseSystem
+## 1                                          
+##   Results.AutomaticPedestrianAlertingSound Results.AxleConfiguration
+## 1                                                                   
+##   Results.Axles Results.BasePrice Results.BatteryA Results.BatteryA_to
+## 1                                                                     
+##   Results.BatteryCells Results.BatteryInfo Results.BatteryKWh
+## 1                                                            
+##   Results.BatteryKWh_to Results.BatteryModules Results.BatteryPacks
+## 1                                                                  
+##   Results.BatteryType Results.BatteryV Results.BatteryV_to
+## 1                                                         
+##   Results.BedLengthIN Results.BedType Results.BlindSpotMon
+## 1                                                         
+##   Results.BodyCabType Results.BodyClass Results.BrakeSystemDesc
+## 1                          Sedan/Saloon                        
+##   Results.BrakeSystemType Results.BusFloorConfigType Results.BusLength
+## 1                                                                     
+##   Results.BusType Results.CAFEBodyType Results.CAFEMake Results.CAFEModel
+## 1                                                                        
+##   Results.CAN_AACN Results.CIB Results.CashForClunkers
+## 1                                                     
+##   Results.ChargerLevel Results.ChargerPowerKW Results.CoolingType
+## 1                                                                
+##   Results.Country Results.CurbWeightLB Results.CustomMotorcycleType
+## 1                                                                  
+##   Results.DaytimeRunningLight Results.DestinationMarket
+## 1                                                      
+##   Results.DisplacementCC Results.DisplacementCI Results.DisplacementL
+## 1                 3800.0        231.89022755998                   3.8
+##   Results.Doors Results.DriveType Results.DriverAssist
+## 1             4                                       
+##   Results.DynamicBrakeSupport Results.EDR Results.ESC Results.EVDriveUnit
+## 1                                                                        
+##   Results.ElectrificationLevel Results.EngineConfiguration
+## 1                                                 V-Shaped
+##   Results.EngineCycles Results.EngineCylinders Results.EngineHP
+## 1                                            6                 
+##   Results.EngineHP_to Results.EngineKW Results.EngineManufacturer
+## 1                                                     GMPTG Flint
+##   Results.EngineModel Results.EntertainmentSystem Results.EquipmentType
+## 1                 L36                                                  
+##                                              Results.ErrorCode
+## 1 0 - VIN decoded clean. Check Digit (9th position) is correct
+##   Results.ForwardCollisionWarning       Results.FuelInjectionType
+## 1                                 Sequential Fuel Injection (SFI)
+##   Results.FuelTypePrimary Results.FuelTypeSecondary Results.GVWR
+## 1                                                               
+##   Results.KeylessIgnition Results.LaneDepartureWarning
+## 1                                                     
+##   Results.LaneKeepSystem Results.LowerBeamHeadlampLightSource Results.Make
+## 1                                                                  PONTIAC
+##   Results.Manufacturer Results.ManufacturerId Results.ManufacturerType
+## 1   GENERAL MOTORS LLC                    984                         
+##   Results.Model Results.ModelYear Results.MotorcycleChassisType
+## 1    Bonneville              2002                              
+##   Results.MotorcycleSuspensionType Results.NCAPBodyType Results.NCAPMake
+## 1                                                                       
+##   Results.NCAPModel Results.NCICCode Results.NCSABodyType Results.NCSAMake
+## 1                                                                         
+##   Results.NCSAModel
+## 1                  
+##                                                 Results.Note
+## 1 Body Type: Sedan, 4-6 Window, Notchback (GM codes: 19, 69)
+##   Results.OtherBusInfo               Results.OtherEngineInfo
+## 1                      Name Plate: Chevrolet, Pontiac, Buick
+##   Results.OtherMotorcycleInfo Results.OtherRestraintSystemInfo
+## 1                                                             
+##   Results.OtherTrailerInfo Results.ParkAssist
+## 1                                            
+##   Results.PedestrianAutomaticEmergencyBraking Results.PlantCity
+## 1                                                         Orion
+##   Results.PlantCompanyName Results.PlantCountry Results.PlantState
+## 1               NA-GM Corp  United States (USA)           Michigan
+##   Results.PossibleValues Results.Pretensioner
+## 1                                            
+##   Results.RearCrossTrafficAlert Results.RearVisibilitySystem
+## 1                                                           
+##   Results.SAEAutomationLevel Results.SAEAutomationLevel_to
+## 1                                                         
+##   Results.SeatBeltsAll Results.SeatRows Results.Seats
+## 1               Manual                               
+##   Results.SemiautomaticHeadlampBeamSwitching Results.Series
+## 1                                                        SE
+##   Results.Series2 Results.SteeringLocation Results.SuggestedVIN
+## 1                                                              
+##   Results.TPMS Results.TopSpeedMPH Results.TrackWidth
+## 1                                                    
+##   Results.TractionControl Results.TrailerBodyType Results.TrailerLength
+## 1                                                                      
+##   Results.TrailerType Results.TransmissionSpeeds Results.TransmissionStyle
+## 1                                                                         
+##   Results.Trim Results.Trim2 Results.Turbo       Results.VIN
+## 1                                          1G2HX54K724118697
+##   Results.ValveTrainDesign Results.VehicleType Results.WheelBaseLong
+## 1     Overhead Valve (OHV)       PASSENGER CAR                      
+##   Results.WheelBaseShort Results.WheelBaseType Results.WheelSizeFront
+## 1                                                                    
+##   Results.WheelSizeRear Results.Wheels Results.Windows
+## 1                                                    4</code></pre>
+<p>You’ll see that this prints out the entire record response fromt the json, with a few parameters to go ahead and convert the response to a dataframe as well as not overload the api with too many calls too quickly.</p>
+<p>In our case we needed to loop over thousands of vehicles. As an example of what a loop for that might look like here we run a few (I’m a huge fan of the pbapply package):</p>
+<pre class="r"><code>library(pbapply)
+library(dplyr)
+library(data.table)
+my_cars = c(&#39;1G2HX54K724118697&#39;, &#39;5UXZV4C58D0E07160&#39;, &#39;1NXBR18E1XZ184142&#39;)
+
+#run loop
+my_data = 
+my_cars %&gt;% pblapply(function(x){
+  vin_diesel(x, sec = 1, tidyup = T)
+}) %&gt;% rbindlist()</code></pre>
+<pre><code>## [1] &quot;https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/1G2HX54K724118697?format=json&quot;
+## [1] &quot;https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/5UXZV4C58D0E07160?format=json&quot;
+## [1] &quot;https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/1NXBR18E1XZ184142?format=json&quot;</code></pre>
+<pre class="r"><code>print(my_data[,.(Results.Make, Results.Model)])</code></pre>
+<pre><code>##    Results.Make Results.Model
+## 1:      PONTIAC    Bonneville
+## 2:          BMW            X5
+## 3:       TOYOTA       Corolla</code></pre>
+<p>I went ahead and pulled only a few columns, but you get the idea. Running in Python is pretty straightforward, but I’ll go over that another time. This was a fun experience and a great lookback to a time when I was still learning some of the more basic functions in R.</p>
+</div>

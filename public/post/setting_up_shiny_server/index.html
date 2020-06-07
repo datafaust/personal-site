@@ -1,0 +1,1144 @@
+<!DOCTYPE html><html lang="en-us" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Fausto Lopez">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="Spinning up a spark cluster in AWS.">
+
+  
+  <link rel="alternate" hreflang="en-us" href="/post/setting_up_shiny_server/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css" integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin="anonymous" title="hl-light">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+        
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="/index.webmanifest">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="/post/setting_up_shiny_server/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="og:site_name" content="Fausto Lopez">
+  <meta property="og:url" content="/post/setting_up_shiny_server/">
+  <meta property="og:title" content="Setting up a Shiny Server on AWS EC2 | Fausto Lopez">
+  <meta property="og:description" content="Spinning up a spark cluster in AWS."><meta property="og:image" content="/post/setting_up_shiny_server/featured.png">
+  <meta property="twitter:image" content="/post/setting_up_shiny_server/featured.png"><meta property="og:locale" content="en-us">
+  
+    
+      <meta property="article:published_time" content="2018-07-01T00:00:00-04:00">
+    
+    <meta property="article:modified_time" content="2018-07-01T00:00:00-04:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "/post/setting_up_shiny_server/"
+  },
+  "headline": "Setting up a Shiny Server on AWS EC2",
+  
+  "image": [
+    "/post/setting_up_shiny_server/featured.png"
+  ],
+  
+  "datePublished": "2018-07-01T00:00:00-04:00",
+  "dateModified": "2018-07-01T00:00:00-04:00",
+  
+  "author": {
+    "@type": "Person",
+    "name": "Fausto Lopez"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "Fausto Lopez",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "Spinning up a spark cluster in AWS."
+}
+</script>
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>Setting up a Shiny Server on AWS EC2 | Fausto Lopez</title>
+
+</head>
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" >
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/">Fausto Lopez</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/">Fausto Lopez</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#about"><span>About</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/files/fausto-lopez-resume.pdf"><span>Resume</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#featured"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  <article class="article">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+<div class="article-container pt-3">
+  <h1>Setting up a Shiny Server on AWS EC2</h1>
+
+  
+  <p class="page-subtitle">Host your own shiny apps 🚀</p>
+  
+
+  
+
+
+<div class="article-metadata">
+
+  
+  
+  
+  
+  <div>
+    
+
+  
+  <span>Fausto Lopez</span>
+  </div>
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Jul 1, 2018
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    7 min read
+  </span>
+  
+
+  
+  
+  
+
+  
+  
+
+</div>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+<div class="article-header article-container featured-image-wrapper mt-4 mb-4" style="max-width: 280px; max-height: 280px;">
+  <div style="position: relative">
+    <img src="/post/setting_up_shiny_server/featured.png" alt="" class="featured-image">
+    <span class="article-header-caption">Image credit: <a href="https://unsplash.com/photos/CpkOjOcXdUY"><strong>Unsplash</strong></a></span>
+  </div>
+</div>
+
+
+
+  <div class="article-container">
+
+    <div class="article-style">
+      <h1 id="why-shiny">Why Shiny?</h1>
+<p>When I started working at TLC I wanted to use R&rsquo;s Shiny package to help develop some quick and easy to use dashboards that would streamline my work flow and automate a lot of data analytics for the team. At the the time I built a few for internal use, but getting them to run across the agency was difficult; the only package known for local install was 
+<a href="https://ficonsulting.github.io/RInno/" target="_blank" rel="noopener">RInno</a> and admin priveleges for this sort of mucking around was frowned upon. The powers at be were not inclined to utilize shiny as they saw it as an open source security issue and so we resolved to use Tableau. I still released a dashboard for public use using shiny.io but that was limited to public data.</p>
+<p>Recently the team has been running into limitations with tableau and myself and some of my creative staff are working with shiny apps as they offer more flexibility and are just more fun to make. As a result I&rsquo;ve been toying with the idea of setting up our own shiny server infrastructure, and since it&rsquo;s also been something on my own personal to-do list, I figured why not (I had done this with a raspberry pi before albeit for fun). Whatever I learn I can use for my own app development and later scale it to the workplace. But wait, why shiny and not flask or django? Well aside from the existing work we are already doing, I think shiny makes for easier development with decent room for scaling, it&rsquo;s free and has a vibrant community as with all things R. As useful as python is for some of my other work, R&rsquo;s just easier in my opinion, just think about the last time you needed to install a package in R vs. Python at work!?</p>
+<p>I went through this process on EC2 but there are a lot of tutorials on how to do this on digital ocean as well as on EC2. I used the following sources in combination for my install process:</p>
+<p>
+<a href="https://deanattali.com/2015/05/09/setup-rstudio-shiny-server-digital-ocean/" target="_blank" rel="noopener">The great Dean Attali installs shiny server on digital ocean</a></p>
+<p>
+<a href="https://tm3.ghost.io/2017/12/31/deploying-an-r-shiny-app-to-aws/" target="_blank" rel="noopener">The clever Catherine Ordun installs shiny server on aws EC2</a></p>
+<h1 id="setup-on-aws">Setup on AWS</h1>
+<p>Another thing on the old to-do list was using AWS which I haven&rsquo;t used much, always defaulting to the rebel favorite digital ocean, and I thought I could go ahead and kill two birds with one stone so I decided to setup the shiny server on AWS ec2, something which ended up being a great decision as I&rsquo;ve gotten much better with AWS since this process.</p>
+<p>First you&rsquo;ll want to navigate to 
+<a href="https://aws.amazon.com/free/" target="_blank" rel="noopener">free tier options</a> and choose the 750 hours of EC2 per month:
+<img src="pick_free.png" alt=""></p>
+<p>Next you&rsquo;ll want to choose your instance (make sure it says free, I chose 16.04 Ubuntu):
+<img src="choose_instance.png" alt=""></p>
+<p>You&rsquo;ll be prompted to set up a key pair, if you&rsquo;ve used AWS before you can go ahead and choose the key pair you already made or else you&rsquo;ll have to make your 
+<a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#having-ec2-create-your-key-pair" target="_blank" rel="noopener">own</a>. Once you move through the rest of the defaults you can launch your instance:
+<img src="launch.png" alt=""></p>
+<p>And you wait until you see it running:
+<img src="running.png" alt=""></p>
+<h2 id="connect-to-the-your-instance">Connect to the your Instance</h2>
+<p>Connecting to your instance can be a headache if you haven&rsquo;t done it before. If you are just starting off then you will have to create a new one; as is often the case with Microsoft windows in programming and data, things are more difficult than MacOS or Linux. First download 
+<a href="https://www.putty.org/" target="_blank" rel="noopener">putty</a>, then you’ll want to create a key pair and convert that key pair with 
+<a href="https://aws.amazon.com/premiumsupport/knowledge-center/convert-pem-file-into-ppk/" target="_blank" rel="noopener">puttygen</a>. Now you can feed this converted pair into your puttygen app to connect. Note that when you finally get that terminal open, your login is ubuntu with no password.</p>
+<h1 id="install-r">Install R</h1>
+<p>I like the idea of having a mobile rstudio option, so as Dean Attali does in his install procedure I went ahead and set that up as well. First I updated and added nginx:</p>
+<pre><code>sudo apt-get update
+sudo apt-get -y install nginx
+</code></pre>
+<p>To test that this worked you can visit your ip address which will look something like http://ec2- . . . .com and you should see a welcoming from nginx. Dean points out when he tests this in digital ocean:</p>
+<p>&ldquo;The default file that is served is located at /var/www/html/index.nginx-debian.html, so if you want to change what that webpage is showing, just edit that file with sudo nano /var/www/html/index.nginx-debian.html. For example, I just put a bit of text redirecting to other pages in my index page. The configuration file is located at /etc/nginx/nginx.conf.</p>
+<p>When you edit an HTML file, you will be able to see the changes immediately when you refresh the page, but if you make configuration changes, you need to restart nginx.&rdquo;</p>
+<p>You can always manipulate nginx with:</p>
+<pre><code>sudo service nginx stop
+sudo service nginx start
+sudo service nginx restart
+</code></pre>
+<p>Next we can add R to the source list:</p>
+<pre><code>sudo sh -c 'echo &quot;deb http://cran.rstudio.com/bin/linux/ubuntu xenial/&quot; &gt;&gt; /etc/apt/sources.list
+</code></pre>
+<p>The above will install R 3.4, if you want 3.5 and above run:</p>
+<pre><code>sudo add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/'
+</code></pre>
+<p>And add public keys:</p>
+<pre><code>gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
+gpg -a --export E084DAB9 | sudo apt-key add -
+</code></pre>
+<p>And install R:</p>
+<pre><code>sudo apt-get update
+sudo apt-get -y install r-base
+</code></pre>
+<p>Go ahead and test R by running R and you should get the pop up window:
+<img src="r_running.png" alt=""></p>
+<p>On EC2 I chose the free tier, which is the weakest machine with 1GB of ram. Dean points out that you can add 1GB of swap space to allow larger packages to be installed:</p>
+<pre><code>sudo /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024
+sudo /sbin/mkswap /var/swap.1
+sudo /sbin/swapon /var/swap.1
+sudo sh -c 'echo &quot;/var/swap.1 swap swap defaults 0 0 &quot; &gt;&gt; /etc/fstab'
+</code></pre>
+<p>Once this is completed we install dependencies for R&rsquo;s devtools along with devtools and Shiny:</p>
+<pre><code>sudo apt-get -y install libcurl4-gnutls-dev libxml2-dev libssl-dev
+sudo su - -c &quot;R -e \&quot;install.packages('devtools', repos='http://cran.rstudio.com/')\&quot;&quot;
+sudo su - -c &quot;R -e \&quot;devtools::install_github('daattali/shinyjs')\&quot;&quot;
+</code></pre>
+<h1 id="important-r-package-install">Important: R Package Install!</h1>
+<p>In order to run certain packages across all users we can&rsquo;t just install in the local R instance you pull up. We will want to leverage root priveleges to install the packages globally. That&rsquo;s why above we run <code>sudo su - -c</code> in order to get that access.</p>
+<h1 id="installing-rstudio-server">Installing Rstudio Server</h1>
+<p>Now that we have R installed we can install Rstudio server which you will be able to access from anywhere with a computer; start with the dependencies:</p>
+<pre><code>sudo apt-get -y install gdebi-core
+</code></pre>
+<p>Next grab the latest version of rstudio; note that you will have to swap the download link for the latest one on the 
+<a href="https://www.rstudio.com/products/rstudio/download-server/" target="_blank" rel="noopener">downloads page</a>:</p>
+<pre><code>wget https://download2.rstudio.org/rstudio-server-1.1.463-amd64.deb
+sudo gdebi rstudio-server-1.1.463-amd64.deb
+</code></pre>
+<p>Before we access rstudio server we have to make sure that our EC2 security settings allow for connections. This is not the most secure way to do things, but at this moment I am just proving a concept. You&rsquo;ll want to navigate to your EC2 dashboard and then down to security groups. Once there locate the security group associated with your instance and edit the inbound rules:</p>
+<p><img src="edit_rules.png" alt=""></p>
+<p>This will open up a window where you can edit the port connections:</p>
+<p><img src="edit_port.png" alt=""></p>
+<p>Here we are allowing a connection from anywhere to hit the relevant ports. You will add rules for port 8787, 3838 and 80 because we will use all these to access our server.</p>
+<p>And now you should be able to access rstudio server in your browser with your ec2 address:
+<img src="rstudio_server_running.png" alt=""></p>
+<p>When I got here initially I was not sure how to login, as I had not created another user; the process in EC2 looked a little trickier and I was running into errors. My workaround was to create a password for the ubuntu un which is the default. Simply run:</p>
+<pre><code>sudo passwd ubuntu
+</code></pre>
+<p>Enter a password and you should be good to go.</p>
+<h1 id="installing-shiny-server">Installing Shiny Server</h1>
+<p>We finally reach the main portion of this tutorial which is installing shiny server! You&rsquo;ll start by importing the shiny package needed to run shiny server an we will bring in the rmarkdown package as well since shiny server lets you run rmarkdown documents:</p>
+<pre><code>sudo su - -c &quot;R -e \&quot;install.packages('shiny', repos='http://cran.rstudio.com/')\&quot;&quot;
+sudo su - -c &quot;R -e \&quot;install.packages('rmarkdown', repos='http://cran.rstudio.com/')\&quot;&quot;
+</code></pre>
+<p>Just like before you&rsquo;ll want to grab the latest version of 
+<a href="https://www.rstudio.com/products/shiny/download-server/" target="_blank" rel="noopener">shiny server</a>:</p>
+<pre><code>wget https://download3.rstudio.org/ubuntu-14.04/x86_64/shiny-server-1.5.9.923-amd64.deb
+sudo gdebi shiny-server-1.5.9.923-amd64.deb
+</code></pre>
+<p>Shiny will let you know it&rsquo;s running:</p>
+<p><img src="shiny_running.png" alt=""></p>
+<p>Once this runs you will be able to hit your EC2 address again as with rstudio server but instead of 8787 as your port you will point the address to 3838 and you will get:</p>
+<p><img src="shiny_page.png" alt=""></p>
+<h1 id="add-write-and-read-priveleges">Add write and read priveleges</h1>
+<pre><code>sudo groupadd shiny-apps
+sudo usermod -aG shiny-apps ubuntu
+sudo usermod -aG shiny-apps shiny
+cd /srv/shiny-server
+sudo chown -R ubuntu:shiny-apps .
+sudo chmod g+w .
+sudo chmod g+s .
+</code></pre>
+<h1 id="deploy-a-shiny-app-using-git">Deploy a Shiny App using Git</h1>
+<p>More to come here as I update this post</p>
+<h1 id="issues-with-rgdal">issues with rgdal</h1>
+<p>run:
+<img src="https://stackoverflow.com/questions/15248815/rgdal-package-installation" alt="link">
+sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
+sudo apt update
+sudo apt install gdal-bin python-gdal python3-gdal libgdal1-dev
+sudo apt-get install libudunits2-dev libgdal-dev libgeos-dev libproj-dev
+install.packages(&ldquo;rgdal&rdquo;)</p>
+
+    </div>
+
+    
+
+
+
+
+
+
+<div class="article-tags">
+  
+  <a class="badge badge-light" href="/tag/academic/">Academic</a>
+  
+</div>
+
+
+
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://twitter.com/intent/tweet?url=/post/setting_up_shiny_server/&amp;text=Setting%20up%20a%20Shiny%20Server%20on%20AWS%20EC2" target="_blank" rel="noopener" class="share-btn-twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.facebook.com/sharer.php?u=/post/setting_up_shiny_server/&amp;t=Setting%20up%20a%20Shiny%20Server%20on%20AWS%20EC2" target="_blank" rel="noopener" class="share-btn-facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="mailto:?subject=Setting%20up%20a%20Shiny%20Server%20on%20AWS%20EC2&amp;body=/post/setting_up_shiny_server/" target="_blank" rel="noopener" class="share-btn-email">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.linkedin.com/shareArticle?url=/post/setting_up_shiny_server/&amp;title=Setting%20up%20a%20Shiny%20Server%20on%20AWS%20EC2" target="_blank" rel="noopener" class="share-btn-linkedin">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="whatsapp://send?text=Setting%20up%20a%20Shiny%20Server%20on%20AWS%20EC2%20/post/setting_up_shiny_server/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://service.weibo.com/share/share.php?url=/post/setting_up_shiny_server/&amp;title=Setting%20up%20a%20Shiny%20Server%20on%20AWS%20EC2" target="_blank" rel="noopener" class="share-btn-weibo">
+          <i class="fab fa-weibo"></i>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    
+    
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <div class="article-widget content-widget-hr">
+    <h3>Related</h3>
+    <ul>
+      
+      <li><a href="/post/aws_1/">Creating a Spark Cluster on AWS with 120 Million Flight Records</a></li>
+      
+      <li><a href="/post/clickhouse_citibike/">Loading 50 Million Citibike Trips into Clickhouse on WSL</a></li>
+      
+      <li><a href="/post/using_tabix_windows/">Using Tabix in Windows WSL</a></li>
+      
+      <li><a href="/post/clickhouse_billion_rides_wsl/">A Billion Taxi Rides in Clickhouse WSL</a></li>
+      
+      <li><a href="/post/taxi_industry_metrics/">Taxi Analytics and KPIs through R Shiny</a></li>
+      
+    </ul>
+  </div>
+  
+
+
+
+
+
+  </div>
+</article>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    <script>const isSiteThemeDark = false;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks",
+        'slides' : "Slides"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+  <p class="powered-by">
+    
+      <a href="/privacy/">Privacy Policy</a>
+    
+    
+       &middot; 
+      <a href="/terms/">Terms</a>
+    
+  </p>
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    Powered by the
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+    <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

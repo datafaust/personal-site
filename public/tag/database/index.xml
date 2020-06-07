@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>database | Fausto Lopez</title>
+    <link>/tag/database/</link>
+      <atom:link href="/tag/database/index.xml" rel="self" type="application/rss+xml" />
+    <description>database</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Thu, 13 Dec 2018 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>database</title>
+      <link>/tag/database/</link>
+    </image>
+    
+    <item>
+      <title>Accessing Clickhouse Data in R &amp; Python</title>
+      <link>/post/accessing-clickhouse-data-in-r-python/</link>
+      <pubDate>Thu, 13 Dec 2018 00:00:00 +0000</pubDate>
+      <guid>/post/accessing-clickhouse-data-in-r-python/</guid>
+      <description>
+
+
+&lt;div id=&#34;why-use-python-or-r&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Why use Python or R?&lt;/h2&gt;
+&lt;p&gt;I think a lot of people wonder why we would use R or python when there are behemoths like Spark and Clickhouse able to crunch data quickly, but the reality is that these database languages weren’t necesarrily set up to do a lot of the more specific data munging work that R and python can do. A lot of data sceintists know that database languages and scripting lanuageges compliment each other.&lt;/p&gt;
+&lt;p&gt;In some of my previous posts I set up a clickhouse database under the wsl system in windows, a bit of a tricky setup but for the purpose of testing locally as well as a potential prototype for the company. In thise post I’m going to focus on accessing the data via R and Python.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;r-access&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;R Access&lt;/h2&gt;
+&lt;p&gt;The leading package for clickhouse access in R at the moment is RClickHouse, which comes with dplyr integration for those who enjoy piping. I’m more of a datatable guy, but I appreciate flexibiity. You’ll want to install the package and connect to the database; if you followed my previous post, it will be at the localhost address:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#install.packages(&amp;#39;RClickhouse&amp;#39;)
+library(RClickhouse)
+library(DBI)
+library(dplyr)
+con = dbConnect(RClickhouse::clickhouse()
+                      , host=&amp;quot;localhost&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Once you’re connected you can begin querying. We will start off with some basic sql:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;dbGetQuery(con, &amp;quot;SELECT cab_type, count(*)
+FROM trips
+           GROUP BY cab_type&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Warning in evalq((function (..., call. = TRUE, immediate. = FALSE,
+## noBreaks. = FALSE, : column count() converted from UInt64 to Numeric&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   cab_type   count()
+## 1   yellow 759083667
+## 2    green  69145084&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;If you’re a fan of dplyr you can pull that way as well:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;trips = 
+tbl(con, &amp;quot;trips&amp;quot;) %&amp;gt;% 
+  group_by(cab_type) %&amp;gt;%
+  summarise(trips=sum(tip_amount, na.rm = T))
+trips&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## # Source:   lazy query [?? x 2]
+## # Database: clickhouse 19.1.6 [default@localhost:9000/default; uptime: 0
+## #   days ]
+##   cab_type       trips
+##   &amp;lt;chr&amp;gt;          &amp;lt;dbl&amp;gt;
+## 1 yellow   1242908568.
+## 2 green      80399851.&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And when you’re done with the code you can disconnect from the database:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Close the connection
+dbDisconnect(con)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;python-access&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Python Access&lt;/h2&gt;
+&lt;p&gt;Python access is very straightforward. You’ll want to reference the &lt;a href=&#34;https://pypi.org/project/clickhouse-driver/&#34;&gt;documentation&lt;/a&gt;. Simply install the driver, I use anaconda for most of my python operations so easily pulled up the terminal and ran the pip install. Next you’ll want to run the following code to enter clickhouse through python and see existing tables:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;from clickhouse_driver import Client
+client = Client(&amp;#39;localhost&amp;#39;)
+client.execute(&amp;#39;SHOW TABLES&amp;#39;)
+client.execute(&amp;#39;SELECT sum(rain) FROM trips&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;In my case I have mutiple tables; you can also see I went ahead and executed a sql query:&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/access_clickhouse_r_py/conda_python_clickhouse.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;conclusions&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Conclusions&lt;/h2&gt;
+&lt;p&gt;This is a great way to access large data with cutting edge database technology throough your favorite scripting language on a windows machines still running the open source software you love. I see it as a good opportunity for teams working within a windows enviornment but needing access to linux software. In one of my next posts I’ll build a quick shiny gui to access the data through a custom front end.&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
