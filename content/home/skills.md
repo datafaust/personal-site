@@ -27,9 +27,9 @@ subtitle = ""
   description = ""
   
 [[feature]]
-  icon = "camera-retro"
-  icon_pack = "fas"
-  name = "Photography"
+  icon = "js-square"
+  icon_pack = "fab"
+  name = "Javascript"
   description = ""
   
 [[feature]] 
@@ -42,6 +42,12 @@ subtitle = ""
   icon = "yandex" 
   icon_pack = "fab" 
   name = "Clickhouse DBMS" 
+  description = ""
+  
+[[feature]] 
+  icon = "react" 
+  icon_pack = "fab" 
+  name = "React" 
   description = ""
 
 # Uncomment to use emoji icons.

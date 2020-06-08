@@ -198,6 +198,16 @@
   </url>
   
   <url>
+    <loc>/project/dblpark/</loc>
+    <lastmod>2016-04-27T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/project/pooper/</loc>
+    <lastmod>2016-04-27T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/project/citibike/</loc>
     <lastmod>2016-04-27T00:00:00-04:00</lastmod>
   </url>
@@ -213,6 +223,16 @@
   </url>
   
   <url>
+    <loc>/project/platenet/</loc>
+    <lastmod>2016-04-27T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/project/icarus/</loc>
+    <lastmod>2016-04-27T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/project/</loc>
     <lastmod>2016-04-27T00:00:00-04:00</lastmod>
   </url>
@@ -223,17 +243,22 @@
   </url>
   
   <url>
-    <loc>/project/verycoolstudios/</loc>
-    <lastmod>2016-04-27T00:00:00-04:00</lastmod>
-  </url>
-  
-  <url>
     <loc>/tag/react/</loc>
     <lastmod>2016-04-27T00:00:00-04:00</lastmod>
   </url>
   
   <url>
     <loc>/project/taxifastdash/</loc>
+    <lastmod>2016-04-27T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/project/tlcdatahub/</loc>
+    <lastmod>2016-04-27T00:00:00-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/project/verycoolstudios/</loc>
     <lastmod>2016-04-27T00:00:00-04:00</lastmod>
   </url>
   

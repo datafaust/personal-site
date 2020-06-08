@@ -13,6 +13,22 @@
     </image>
     
     <item>
+      <title>A DOUBLE PARKING APP IN REACT</title>
+      <link>/project/dblpark/</link>
+      <pubDate>Wed, 27 Apr 2016 00:00:00 -0400</pubDate>
+      <guid>/project/dblpark/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>A POOPER APP IN REACT</title>
+      <link>/project/pooper/</link>
+      <pubDate>Wed, 27 Apr 2016 00:00:00 -0400</pubDate>
+      <guid>/project/pooper/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Citibike Locator: find citi-bike locations in NYC</title>
       <link>/project/citibike/</link>
       <pubDate>Wed, 27 Apr 2016 00:00:00 -0400</pubDate>
@@ -29,6 +45,22 @@
     </item>
     
     <item>
+      <title>PLATENET MOBILE APP (Coming Soon...)</title>
+      <link>/project/platenet/</link>
+      <pubDate>Wed, 27 Apr 2016 00:00:00 -0400</pubDate>
+      <guid>/project/platenet/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Project Icarus: a realtime flight route database using OpenRadar</title>
+      <link>/project/icarus/</link>
+      <pubDate>Wed, 27 Apr 2016 00:00:00 -0400</pubDate>
+      <guid>/project/icarus/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>RatInspector: a webapp tracking NYC&#39;s battle against the rat hordes</title>
       <link>/project/rodents/</link>
       <pubDate>Wed, 27 Apr 2016 00:00:00 -0400</pubDate>
@@ -37,18 +69,26 @@
     </item>
     
     <item>
-      <title>RatInspector: a webapp tracking NYC&#39;s battle against the rat hordes</title>
-      <link>/project/verycoolstudios/</link>
-      <pubDate>Wed, 27 Apr 2016 00:00:00 -0400</pubDate>
-      <guid>/project/verycoolstudios/</guid>
-      <description></description>
-    </item>
-    
-    <item>
       <title>Taxi Fast Dashboard</title>
       <link>/project/taxifastdash/</link>
       <pubDate>Wed, 27 Apr 2016 00:00:00 -0400</pubDate>
       <guid>/project/taxifastdash/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>TLC DATA HUB</title>
+      <link>/project/tlcdatahub/</link>
+      <pubDate>Wed, 27 Apr 2016 00:00:00 -0400</pubDate>
+      <guid>/project/tlcdatahub/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>VERYCOOL STUDIO WEBSITE</title>
+      <link>/project/verycoolstudios/</link>
+      <pubDate>Wed, 27 Apr 2016 00:00:00 -0400</pubDate>
+      <guid>/project/verycoolstudios/</guid>
       <description></description>
     </item>
     

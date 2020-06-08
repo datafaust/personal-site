@@ -13,7 +13,7 @@ summary = "Built in React JS and optimized for mobile, this webapp tracks metric
 tags = ["react"]
 
 # Optional external URL for project (replaces project detail page).
-external_link = "https://datafaust.github.io/nyc-link/"
+external_link = "https://datafaust.github.io/rodents-map/"
 
 # Featured image
 # To use, add an image named `featured.jpg/png` to your project's folder. 

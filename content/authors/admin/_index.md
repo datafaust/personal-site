@@ -44,4 +44,6 @@ user_groups:
 - Visitors
 ---
 
-Welcome to my site, a place where I publish some of my work, personal projects and anything else that interests me. I am a creative and resourceful data scientist with over 5 years experience munging, wrangling and analyzing large data sets. As the current Data & Analytics Manager at the Taxi & Limousine Commission for the City of New York I lead a team of analysts who work to expand/automate big data analytical processes, build databases, data pipelines, dashboards and conduct innovative policy research, some of which has lead to unprecedented impactful legislation in the taxi industry. On my free time I like to film, build and fly drones and learn languages.
+Welcome to my site, a place where I publish some of my work, personal projects and anything else that interests me. 
+
+I am a creative and resourceful data engineer and software developer. Currently, I am the Director of Data Engineering and Analytics at the Taxi & Limousine Commission of the New York City. My work involves developing and automating big data processes, building and interacting with databases, creating apps and dashboards for TLC and public, as well as conducting high level research to empower impactful legislation in the area of city transportation. I am also a co-founder of [VeryCool Studio](http://www.verycool-studio.com/) - an app development, data analysis, and rapid prototyping company. In my spare time I work on data projects, repair motorcycles and make movies.
